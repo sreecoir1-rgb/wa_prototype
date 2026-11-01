@@ -17,7 +17,11 @@ class Settings(BaseSettings):
     # Webhook Verification & Security
     WEBHOOK_VERIFY_TOKEN: str = ""
     APP_SECRET: str = ""
-    SECRET_KEY: str = ""
+    SECRET_KEY: str = "dev-secret-key-change-in-production-12345"
+
+    # Admin Authentication
+    ADMIN_USERNAME: str = "admin"
+    ADMIN_PASSWORD_HASH: str = ""
 
     # Database
     DATABASE_URL: str = "sqlite:///./app.db"

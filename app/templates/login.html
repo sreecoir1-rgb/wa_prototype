@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - WhatsApp Broadcaster{% endblock %}
+
+{% block content %}
+<div style="max-width: 440px; margin: 5rem auto;">
+  <article>
+    <header style="text-align: center;">
+      <h3>Admin Sign In</h3>
+      <p style="color: var(--pico-muted-color); font-size: 0.9rem;">WhatsApp Broadcaster Dashboard</p>
+    </header>
+
+    <form method="post" action="/login">
+      <label for="username">
+        Username
+        <input type="text" id="username" name="username" placeholder="admin" required autofocus>
+      </label>
+
+      <label for="password">
+        Password
+        <input type="password" id="password" name="password" placeholder="••••••••" required>
+      </label>
+
+      <button type="submit" style="width: 100%; margin-top: 1rem;">Sign In</button>
+    </form>
+    
+    <footer style="font-size: 0.8rem; text-align: center; color: var(--pico-muted-color);">
+      Default local credentials: <code>admin</code> / <code>admin123</code>
+    </footer>
+  </article>
+</div>
+{% endblock %}

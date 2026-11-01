@@ -3,11 +3,14 @@ Main FastAPI application entry point.
 """
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from starlette.middleware.sessions import SessionMiddleware
 
+from app.config import settings
 from app.database import init_db
 from app.routes.contacts import router as contacts_router
 from app.routes.campaigns import router as campaigns_router
 from app.routes.webhook import router as webhook_router
+from app.routes.ui import router as ui_router
 
 
 @asynccontextmanager
@@ -27,7 +30,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Enable encrypted session cookies for admin login
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SECRET_KEY,
+    session_cookie="wa_admin_session",
+    max_age=14 * 24 * 3600,  # 14 days
+)
+
 # Register route modules
+app.include_router(ui_router)
 app.include_router(contacts_router)
 app.include_router(campaigns_router)
 app.include_router(webhook_router)

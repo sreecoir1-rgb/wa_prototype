@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Contacts - WhatsApp Broadcaster{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+  <div>
+    <h2>Contacts & Audience</h2>
+    <p style="color: var(--pico-muted-color); margin: 0;">Total Contacts: {{ contacts|length }}</p>
+  </div>
+  <div>
+    <a href="/admin/contacts/import" role="button" class="outline">+ Import CSV</a>
+  </div>
+</div>
+
+<!-- Filters -->
+<form method="get" action="/admin/contacts" style="display: flex; gap: 1rem; align-items: flex-end; margin-bottom: 1.5rem;">
+  <div style="flex: 1;">
+    <label for="status">Consent Status</label>
+    <select id="status" name="status">
+      <option value="">All Statuses</option>
+      <option value="opted_in" {% if current_status == 'opted_in' %}selected{% endif %}>Opted In (Eligible for Broadcast)</option>
+      <option value="opted_out" {% if current_status == 'opted_out' %}selected{% endif %}>Opted Out (Excluded)</option>
+      <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending Consent</option>
+    </select>
+  </div>
+  <div style="flex: 1;">
+    <label for="tag">Tag Filter</label>
+    <input type="text" id="tag" name="tag" placeholder="e.g. vip, rates" value="{{ current_tag or '' }}">
+  </div>
+  <div>
+    <button type="submit" style="margin-bottom: 0;">Filter</button>
+  </div>
+  {% if current_status or current_tag %}
+  <div>
+    <a href="/admin/contacts" role="button" class="secondary outline" style="margin-bottom: 0;">Reset</a>
+  </div>
+  {% endif %}
+</form>
+
+<!-- Table -->
+<div class="overflow-auto">
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Phone (E.164)</th>
+        <th>Consent Status</th>
+        <th>Consent Date</th>
+        <th>Tags</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for contact in contacts %}
+      <tr>
+        <td>{{ contact.id }}</td>
+        <td>{{ contact.name or '—' }}</td>
+        <td><code>{{ contact.phone }}</code></td>
+        <td>
+          <span class="badge badge-{{ contact.consent_status }}">
+            {{ contact.consent_status }}
+          </span>
+        </td>
+        <td>
+          {% if contact.consent_date %}
+            {{ contact.consent_date.strftime('%Y-%m-%d %H:%M') }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>{{ contact.tags or '—' }}</td>
+        <td>
+          {% if contact.consent_status == 'opted_in' %}
+          <form method="post" action="/admin/contacts/{{ contact.id }}/opt-out" style="margin: 0;" onsubmit="return confirm('Are you sure you want to opt out this contact?');">
+            <button type="submit" class="outline secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Opt Out</button>
+          </form>
+          {% else %}
+          <span style="color: var(--pico-muted-color); font-size: 0.8rem;">None</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" style="text-align: center; color: var(--pico-muted-color); padding: 2rem;">
+          No contacts found. Click <strong><a href="/admin/contacts/import">Import CSV</a></strong> to add contacts.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

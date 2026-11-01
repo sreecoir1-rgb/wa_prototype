@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Campaigns & Rate Offers - WhatsApp Broadcaster{% endblock %}
+
+{% block content %}
+<h2>Campaigns & Rate Broadcasts</h2>
+
+<div class="grid" style="margin-top: 1.5rem;">
+  <!-- Left column: New Campaign & Rate Studio -->
+  <div>
+    <article>
+      <header>
+        <h4>Launch a Broadcast</h4>
+        <p style="color: var(--pico-muted-color); font-size: 0.85rem; margin: 0;">
+          Compose and trigger rate offers to opted-in audiences.
+        </p>
+      </header>
+
+      <form method="post" action="/admin/campaigns/send" id="broadcastForm" onsubmit="return confirmBroadcast();">
+        <label for="name">
+          Campaign Name
+          <input type="text" id="name" name="name" placeholder="e.g. Daily Gold Rate Offer - Today" required>
+        </label>
+
+        <label for="template_id">
+          WhatsApp Template (Pre-Approved by Meta)
+          <select id="template_id" name="template_id" required onchange="updatePreview();">
+            {% for t in templates %}
+            <option value="{{ t.id }}" data-preview="{{ t.body_preview or 'Hello World! Welcome to our official WhatsApp service.' }}">
+              {{ t.name }} ({{ t.language }})
+            </option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <label for="rate_offer">
+          Today's Rate / Custom Offer Notes
+          <input type="text" id="rate_offer" name="rate_offer" placeholder="e.g. 24K Gold: ₹7,850/gm (Special 1% off today)" oninput="updatePreview();">
+        </label>
+
+        <label for="audience_filter">
+          Audience Filter
+          <select id="audience_filter" name="audience_filter">
+            <option value="">All Opted-In Contacts ({{ opted_in_count }} eligible)</option>
+            <option value="rates">Only Contacts Tagged 'rates'</option>
+            <option value="vip">Only Contacts Tagged 'vip'</option>
+          </select>
+        </label>
+
+        <fieldset>
+          <label for="dry_run">
+            <input type="checkbox" id="dry_run" name="dry_run" value="true" {% if dry_run_default %}checked{% endif %}>
+            <strong>DRY RUN (Simulation Mode)</strong>
+            <small style="display: block; color: var(--pico-muted-color);">
+              Simulates delivery and logs results without sending real WhatsApp messages. Uncheck only when ready for real sends.
+            </small>
+          </label>
+        </fieldset>
+
+        <button type="submit" style="width: 100%; margin-top: 1rem; background: var(--wa-green); border-color: var(--wa-green); color: #000; font-weight: 700;">
+          🚀 Send Broadcast
+        </button>
+      </form>
+    </article>
+  </div>
+
+  <!-- Right column: Message Preview & Safeguards -->
+  <div>
+    <article>
+      <header>
+        <h4>Live WhatsApp Preview</h4>
+        <p style="color: var(--pico-muted-color); font-size: 0.85rem; margin: 0;">
+          How your message appears on the customer's phone.
+        </p>
+      </header>
+
+      <div style="background: #efeae2; padding: 20px; border-radius: 8px; border: 1px solid #d1d7db; min-height: 180px;">
+        <div style="font-size: 0.75rem; color: #667781; text-align: center; margin-bottom: 10px;">TODAY</div>
+        
+        <div class="chat-bubble">
+          <div id="previewBody" style="white-space: pre-line;">Hello World! Welcome to our official WhatsApp service.</div>
+          <div id="previewOffer" style="margin-top: 8px; font-weight: 600; color: #1e3a8a;"></div>
+          <div style="text-align: right; font-size: 0.7rem; color: #667781; margin-top: 4px;">12:00 PM ✓✓</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <h5>Compliance Safeguards</h5>
+        <ul style="font-size: 0.85rem; color: var(--pico-muted-color);">
+          <li>✓ <strong>Consent Enforced</strong>: Excludes all pending and opted-out contacts.</li>
+          <li>✓ <strong>Opt-Out Supported</strong>: Any reply of "STOP" opts out the customer immediately.</li>
+          <li>✓ <strong>Paced Dispatch</strong>: Rate-limited to prevent carrier blocking.</li>
+        </ul>
+      </div>
+    </article>
+  </div>
+</div>
+
+<hr style="margin: 3rem 0 2rem;">
+
+<!-- Past Campaigns Table -->
+<h3>Past Campaigns History</h3>
+<div class="overflow-auto">
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Campaign Name</th>
+        <th>Template</th>
+        <th>Audience Filter</th>
+        <th>Status</th>
+        <th>Messages Logged</th>
+        <th>Created At</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in campaigns %}
+      <tr>
+        <td>{{ c.id }}</td>
+        <td><strong>{{ c.name }}</strong></td>
+        <td><code>{{ c.template.name }}</code></td>
+        <td>{{ c.audience_filter or 'All Opted-In' }}</td>
+        <td>
+          <span class="badge badge-{{ c.status }}">
+            {{ c.status }}
+          </span>
+        </td>
+        <td>{{ c.messages|length }} recipients</td>
+        <td>{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" style="text-align: center; color: var(--pico-muted-color); padding: 1.5rem;">
+          No campaigns sent yet. Create your first broadcast above!
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  function updatePreview() {
+    const select = document.getElementById('template_id');
+    const selectedOption = select.options[select.selectedIndex];
+    const previewText = selectedOption ? selectedOption.getAttribute('data-preview') : '';
+    const rateOffer = document.getElementById('rate_offer').value;
+
+    document.getElementById('previewBody').textContent = previewText;
+    document.getElementById('previewOffer').textContent = rateOffer ? 'Offer: ' + rateOffer : '';
+  }
+
+  function confirmBroadcast() {
+    const isDryRun = document.getElementById('dry_run').checked;
+    const mode = isDryRun ? "DRY RUN (Simulation)" : "LIVE SEND (Real WhatsApp Messages)";
+    const promptMsg = "⚠️ CONFIRMATION REQUIRED\n\nMode: " + mode + "\n\nAre you sure you want to proceed with this broadcast?";
+    return confirm(promptMsg);
+  }
+
+  // Initial preview on load
+  document.addEventListener('DOMContentLoaded', updatePreview);
+</script>
+{% endblock %}
