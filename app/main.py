@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.database import init_db
+from app.routes.contacts import router as contacts_router
 
 
 @asynccontextmanager
@@ -23,6 +24,9 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# Register route modules
+app.include_router(contacts_router)
 
 
 @app.get("/health", tags=["Health"])
