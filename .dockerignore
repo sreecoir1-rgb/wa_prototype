@@ -1,0 +1,28 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Secrets & local DB
+.env
+*.db
+*.sqlite3
+
+# Git
+.git/
+.gitignore
+
+# Tests & Cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/

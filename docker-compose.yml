@@ -1,0 +1,40 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg://wa_user:wa_password@db:5432/wa_broadcaster
+      - DRY_RUN=true
+      - SECRET_KEY=dev-secret-key-change-in-production-12345
+      - WEBHOOK_VERIFY_TOKEN=choose_any_random_string
+      - APP_SECRET=your_meta_app_secret_here
+      - WHATSAPP_TOKEN=your_test_token_here
+      - WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id_here
+      - WHATSAPP_BUSINESS_ACCOUNT_ID=your_waba_id_here
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: wa_user
+      POSTGRES_PASSWORD: wa_password
+      POSTGRES_DB: wa_broadcaster
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wa_user -d wa_broadcaster"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

@@ -1,0 +1,44 @@
+name: CI Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Pytest & Migration Suite
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: sqlite:///./test_ci.db
+      SECRET_KEY: ci-test-secret-key-12345
+      DRY_RUN: "true"
+      WEBHOOK_VERIFY_TOKEN: ci-verify-token
+      APP_SECRET: your_meta_app_secret_here
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verify Database Migrations (Upgrade & Downgrade)
+        run: |
+          alembic upgrade head
+          alembic downgrade base
+          alembic upgrade head
+
+      - name: Run Automated Test Suite
+        run: |
+          pytest -v

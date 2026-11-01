@@ -1,5 +1,6 @@
 """
 Database connection, session management, and base declarative class for SQLAlchemy.
+Supports both SQLite (local development) and PostgreSQL (Supabase / Render / Cloud production).
 """
 from typing import Generator
 from sqlalchemy import create_engine
@@ -7,15 +8,38 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
 
 from app.config import settings
 
-# SQLite requires 'check_same_thread: False' to allow multi-threaded access in FastAPI
+
+def get_normalized_database_url(raw_url: str) -> str:
+    """
+    Normalizes PostgreSQL connection strings from cloud platforms (Supabase, Render)
+    to use the modern 'postgresql+psycopg' driver.
+    """
+    if raw_url.startswith("postgres://"):
+        return raw_url.replace("postgres://", "postgresql+psycopg://", 1)
+    if raw_url.startswith("postgresql://") and not raw_url.startswith("postgresql+"):
+        return raw_url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return raw_url
+
+
+normalized_db_url = get_normalized_database_url(settings.DATABASE_URL)
+
 connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
+engine_kwargs = {"echo": False}
+
+if normalized_db_url.startswith("sqlite"):
     connect_args["check_same_thread"] = False
+else:
+    # PostgreSQL connection pool settings for production
+    engine_kwargs.update({
+        "pool_size": 10,
+        "max_overflow": 20,
+        "pool_pre_ping": True,
+    })
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    normalized_db_url,
     connect_args=connect_args,
-    echo=False,
+    **engine_kwargs,
 )
 
 # Factory for creating fresh database sessions
