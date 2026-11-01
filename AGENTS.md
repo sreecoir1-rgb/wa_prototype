@@ -98,7 +98,7 @@ Work one milestone at a time. Mark done with [x] when it works and is committed.
 - [x] **M4 Templates and campaigns:** `templates` and `campaigns` tables; sender service that selects only opted-in contacts, sends, and logs each result; dry-run mode; basic rate limiting and retry. *Learn: business logic, separation of concerns.*
 - [x] **M5 Webhooks:** endpoint for Meta verification + delivery status + incoming replies; verify the `X-Hub-Signature-256` signature; STOP handling; idempotent processing of duplicate events; expose via ngrok/Cloudflare Tunnel. *Learn: event-driven design, webhook security.*
 - [x] **M6 Admin UI:** login (single admin, hashed password, session cookie); pages to view contacts, import CSV, edit today's rate, preview the message, and send a campaign (with a confirmation step). *Learn: sessions, hashing, server-rendered UI.*
-- [ ] **M7 Quality:** pytest tests (consent filtering, opt-out, phone validation, webhook signature), structured logging, a clear README so anyone can run the project.
+- [x] **M7 Quality:** pytest tests (consent filtering, opt-out, phone validation, webhook signature), structured logging, a clear README so anyone can run the project.
 
 **Phase 1 is done when:** I can import contacts, edit a rate, send a campaign to my test numbers, see delivery statuses, and opt out by replying STOP.
 
