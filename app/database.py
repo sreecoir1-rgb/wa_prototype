@@ -69,4 +69,12 @@ def get_db() -> Generator[Session, None, None]:
 
 def init_db() -> None:
     """Creates all database tables defined in models if they do not exist."""
-    Base.metadata.create_all(bind=engine)
+    if normalized_db_url.startswith("sqlite"):
+        Base.metadata.create_all(bind=engine)
+    else:
+        # In PostgreSQL/production, tables are managed via Alembic migrations.
+        # We run create_all only as a safe fallback if tables don't exist.
+        try:
+            Base.metadata.create_all(bind=engine, checkfirst=True)
+        except Exception:
+            pass
