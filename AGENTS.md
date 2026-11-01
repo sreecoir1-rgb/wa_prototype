@@ -104,12 +104,12 @@ Work one milestone at a time. Mark done with [x] when it works and is committed.
 
 ## 8. Roadmap: Phase 2 (secure cloud deployment)
 
-- [ ] Dockerfile and docker-compose (app + PostgreSQL)
-- [ ] Switch to PostgreSQL; add Alembic migrations
-- [ ] Choose host (Render/Railway for learning; AWS/Azure/GCP Mumbai or Hyderabad for enterprise-style)
-- [ ] HTTPS only; secrets in the platform's secret manager
+- [x] Dockerfile and docker-compose (app + PostgreSQL)
+- [x] Switch to PostgreSQL; add Alembic migrations
+- [x] Choose host (Render/Railway for learning; AWS/Azure/GCP Mumbai or Hyderabad for enterprise-style)
+- [x] HTTPS only; secrets in the platform's secret manager
 - [ ] Least-privilege DB user, private DB network, automated backups
-- [ ] GitHub Actions: run tests on push, deploy on merge to `main`
+- [x] GitHub Actions: run tests on push, deploy on merge to `main`
 - [ ] Meta Business Verification; register the real business number; point webhook to production URL
 - [ ] Pilot with a few real, opted-in customers
 - [ ] Monitoring: Sentry, uptime checks, searchable logs
