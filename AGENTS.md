@@ -93,7 +93,7 @@ Work one milestone at a time. Mark done with [x] when it works and is committed.
 
 - [x] **M0 Setup:** project folder, virtual environment, git repo, `.gitignore` (includes `.env`, `.venv`, `*.db`), `requirements.txt`, `.env.example`, minimal FastAPI app with a `/health` endpoint.
 - [x] **M1 Hello WhatsApp:** `whatsapp_client.py` that sends one template message to my own verified test number via the Cloud API. *Learn: REST APIs, env vars, secrets.*
-- [ ] **M2 Contacts database:** SQLAlchemy models for `contacts` and `messages_log`; phone normalization to E.164. *Learn: data modeling, CRUD.*
+- [x] **M2 Contacts database:** SQLAlchemy models for `contacts` and `messages_log`; phone normalization to E.164. *Learn: data modeling, CRUD.*
 - [ ] **M3 Backend API:** endpoints to add/list/edit contacts, import CSV, mark opted-out; Pydantic validation; test via `/docs`. *Learn: API design, validation.*
 - [ ] **M4 Templates and campaigns:** `templates` and `campaigns` tables; sender service that selects only opted-in contacts, sends, and logs each result; dry-run mode; basic rate limiting and retry. *Learn: business logic, separation of concerns.*
 - [ ] **M5 Webhooks:** endpoint for Meta verification + delivery status + incoming replies; verify the `X-Hub-Signature-256` signature; STOP handling; idempotent processing of duplicate events; expose via ngrok/Cloudflare Tunnel. *Learn: event-driven design, webhook security.*
