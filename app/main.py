@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from app.database import init_db
 from app.routes.contacts import router as contacts_router
+from app.routes.campaigns import router as campaigns_router
 
 
 @asynccontextmanager
@@ -27,6 +28,7 @@ app = FastAPI(
 
 # Register route modules
 app.include_router(contacts_router)
+app.include_router(campaigns_router)
 
 
 @app.get("/health", tags=["Health"])

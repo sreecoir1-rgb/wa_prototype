@@ -57,3 +57,56 @@ class CSVImportSummary(BaseModel):
     imported: int
     skipped_duplicates: int
     errors: list[str]
+
+
+class TemplateBase(BaseModel):
+    name: str
+    language: str = "en_US"
+    body_preview: str | None = None
+    variables: str | None = None
+
+
+class TemplateCreate(TemplateBase):
+    """Schema for registering a pre-approved template."""
+    pass
+
+
+class TemplateResponse(TemplateBase):
+    """Schema for returning template details."""
+    id: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CampaignBase(BaseModel):
+    name: str
+    template_id: int
+    audience_filter: str | None = None
+
+
+class CampaignCreate(CampaignBase):
+    """Schema for creating a new broadcast campaign."""
+    pass
+
+
+class CampaignResponse(CampaignBase):
+    """Schema for returning campaign details."""
+    id: int
+    status: str
+    scheduled_at: datetime | None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CampaignSendSummary(BaseModel):
+    """Summary report returned after executing a campaign broadcast."""
+    campaign_id: int
+    campaign_name: str
+    total_targeted: int
+    sent_success: int
+    failed: int
+    dry_run: bool
+    status: str
+
