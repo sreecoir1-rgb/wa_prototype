@@ -18,10 +18,12 @@ from app.services.auth_service import (
     require_admin,
 )
 from app.services.campaign_sender import CampaignSender
+from pathlib import Path
 from app.routes.contacts import import_contacts_csv
 
 router = APIRouter(include_in_schema=False)
-templates = Jinja2Templates(directory="app/templates")
+TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 campaign_sender = CampaignSender()
 
 

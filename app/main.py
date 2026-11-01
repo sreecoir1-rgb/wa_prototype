@@ -1,6 +1,7 @@
 """
 Main FastAPI application entry point.
 """
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
@@ -13,6 +14,8 @@ from app.routes.campaigns import router as campaigns_router
 from app.routes.webhook import router as webhook_router
 from app.routes.ui import router as ui_router
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,7 +24,10 @@ async def lifespan(app: FastAPI):
     Ensures all database tables exist when the server starts.
     """
     setup_logging()
-    init_db()
+    try:
+        init_db()
+    except Exception as exc:
+        logger.error(f"Database initialization warning on startup: {exc}")
     yield
 
 
