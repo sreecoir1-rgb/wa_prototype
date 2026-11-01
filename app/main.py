@@ -7,6 +7,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import settings
 from app.database import init_db
+from app.logging_config import setup_logging
 from app.routes.contacts import router as contacts_router
 from app.routes.campaigns import router as campaigns_router
 from app.routes.webhook import router as webhook_router
@@ -19,6 +20,7 @@ async def lifespan(app: FastAPI):
     Lifespan context manager that runs startup and shutdown logic.
     Ensures all database tables exist when the server starts.
     """
+    setup_logging()
     init_db()
     yield
 
