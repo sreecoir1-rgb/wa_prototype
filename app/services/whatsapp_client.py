@@ -22,10 +22,17 @@ class WhatsAppAPIError(Exception):
 
 def mask_phone_number(phone: str) -> str:
     """
-    Masks a phone number to protect customer privacy in logs.
-    Example: '+919876543210' -> '+91******3210'
+    Masks a phone number or Telegram chat ID to protect customer privacy in logs.
+    Example: '+919876543210' -> '+91******3210', 'tg_987654321' -> 'tg_98****21'
     """
-    if not phone or len(phone) < 7:
+    if not phone:
+        return "****"
+    if phone.startswith("tg_"):
+        raw_id = phone[3:]
+        if len(raw_id) < 5:
+            return "tg_****"
+        return f"tg_{raw_id[:2]}****{raw_id[-2:]}"
+    if len(phone) < 7:
         return "****"
     prefix = phone[:3]
     suffix = phone[-4:]

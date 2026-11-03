@@ -21,6 +21,12 @@ def normalize_phone_number(raw_phone: str, default_country_code: str = "+91") ->
         raise ValueError("Phone number must be a non-empty string.")
 
     cleaned = raw_phone.strip()
+    if cleaned.lower().startswith(("tg_", "tg:")):
+        digits = re.sub(r"\D", "", cleaned)
+        if not digits:
+            raise ValueError(f"Telegram ID '{raw_phone}' contains no digits.")
+        return f"tg_{digits}"
+
     has_plus = cleaned.startswith("+")
 
     # Remove all non-digit characters

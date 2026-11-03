@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     WHATSAPP_PHONE_NUMBER_ID: str = ""
     WHATSAPP_BUSINESS_ACCOUNT_ID: str = ""
 
+    # Telegram Bot API Credentials & Multi-Channel Provider
+    TELEGRAM_BOT_TOKEN: str = ""
+    BROADCAST_PROVIDER: str = "telegram"  # "telegram", "whatsapp", or "both"
+
     # Webhook Verification & Security
     WEBHOOK_VERIFY_TOKEN: str = ""
     APP_SECRET: str = ""

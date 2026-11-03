@@ -12,6 +12,7 @@ from app.config import settings
 from app.models import Contact, Campaign, MessageLog
 from app.schemas import CampaignSendSummary
 from app.services.whatsapp_client import WhatsAppClient
+from app.services.telegram_client import TelegramClient
 
 logger = logging.getLogger(__name__)
 
@@ -64,22 +65,30 @@ class CampaignSender:
         sent_success = 0
         failed = 0
 
-        client = WhatsAppClient(dry_run=is_dry_run)
+        wa_client = WhatsAppClient(dry_run=is_dry_run)
+        tg_client = TelegramClient(dry_run=is_dry_run)
 
         for contact in contacts:
             success = False
             wamid = None
             last_error = None
+            is_telegram = contact.phone.startswith("tg_")
 
             for attempt in range(max_retries + 1):
                 try:
-                    result = client.send_template(
-                        to_phone=contact.phone,
-                        template_name=campaign.template.name,
-                        language_code=campaign.template.language,
-                    )
-                    messages = result.get("messages", [])
-                    wamid = messages[0].get("id") if messages else ("simulated_wamid" if is_dry_run else None)
+                    if is_telegram:
+                        raw_chat_id = contact.phone.replace("tg_", "")
+                        msg_text = campaign.template.body_preview or f"📢 <b>{campaign.name}</b>"
+                        tg_res = tg_client.send_message(chat_id=raw_chat_id, text=msg_text)
+                        wamid = f"tg_{tg_res.get('message_id', 'simulated')}"
+                    else:
+                        result = wa_client.send_template(
+                            to_phone=contact.phone,
+                            template_name=campaign.template.name,
+                            language_code=campaign.template.language,
+                        )
+                        messages = result.get("messages", [])
+                        wamid = messages[0].get("id") if messages else ("simulated_wamid" if is_dry_run else None)
                     success = True
                     break
                 except Exception as exc:

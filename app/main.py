@@ -12,6 +12,7 @@ from app.logging_config import setup_logging
 from app.routes.contacts import router as contacts_router
 from app.routes.campaigns import router as campaigns_router
 from app.routes.webhook import router as webhook_router
+from app.routes.telegram_webhook import router as telegram_webhook_router
 from app.routes.ui import router as ui_router
 
 logger = logging.getLogger(__name__)
@@ -51,6 +52,7 @@ app.include_router(ui_router)
 app.include_router(contacts_router)
 app.include_router(campaigns_router)
 app.include_router(webhook_router)
+app.include_router(telegram_webhook_router)
 
 
 @app.get("/health", tags=["Health"])
