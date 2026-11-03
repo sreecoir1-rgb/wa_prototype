@@ -1,32 +1,37 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Login - WhatsApp Broadcaster{% endblock %}
+{% block title %}Sign In - OmniBroadcast Pro{% endblock %}
 
 {% block content %}
-<div style="max-width: 440px; margin: 5rem auto;">
-  <article>
-    <header style="text-align: center;">
-      <h3>Admin Sign In</h3>
-      <p style="color: var(--pico-muted-color); font-size: 0.9rem;">WhatsApp Broadcaster Dashboard</p>
-    </header>
+<div style="max-width: 440px; margin: 4rem auto 2rem;">
+  <article class="pro-card" style="box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05); border-radius: 16px;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #4f46e5, #06b6d4); border-radius: 14px; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: white; box-shadow: 0 8px 16px -4px rgba(79, 70, 229, 0.35);">
+        ⚡
+      </div>
+      <h3 style="margin-bottom: 0.25rem; font-weight: 800; letter-spacing: -0.02em;">OmniBroadcast Pro</h3>
+      <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0;">Multi-Channel Admin Portal</p>
+    </div>
 
     <form method="post" action="/login">
-      <label for="username">
-        Username
-        <input type="text" id="username" name="username" placeholder="admin" required autofocus>
+      <label for="username" style="font-weight: 600; font-size: 0.85rem; color: var(--text-main);">
+        Admin Username
+        <input type="text" id="username" name="username" placeholder="admin" required autofocus style="border-radius: 8px; margin-top: 0.25rem;">
       </label>
 
-      <label for="password">
+      <label for="password" style="font-weight: 600; font-size: 0.85rem; color: var(--text-main); margin-top: 0.75rem;">
         Password
-        <input type="password" id="password" name="password" placeholder="••••••••" required>
+        <input type="password" id="password" name="password" placeholder="••••••••" required style="border-radius: 8px; margin-top: 0.25rem;">
       </label>
 
-      <button type="submit" style="width: 100%; margin-top: 1rem;">Sign In</button>
+      <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1.5rem; font-size: 0.95rem; padding: 0.75rem;">
+        Sign In to Studio →
+      </button>
     </form>
     
-    <footer style="font-size: 0.8rem; text-align: center; color: var(--pico-muted-color);">
-      Default local credentials: <code>admin</code> / <code>admin123</code>
-    </footer>
+    <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); font-size: 0.78rem; text-align: center; color: var(--text-muted);">
+      Protected with encrypted session tokens & bcrypt hashing.
+    </div>
   </article>
 </div>
 {% endblock %}

@@ -16,7 +16,7 @@ from app.services.telegram_client import TelegramClient, mask_chat_id
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["Telegram Webhook"])
+router = APIRouter(tags=["Telegram Bot Webhook"])
 telegram_client = TelegramClient()
 
 OPT_OUT_KEYWORDS = {"STOP", "/STOP", "UNSUBSCRIBE", "CANCEL", "QUIT"}
@@ -68,6 +68,8 @@ async def telegram_webhook(
             contact.consent_status = "opted_in"
             contact.consent_date = datetime.now()
             contact.consent_source = "telegram_start"
+            if "channel:telegram" not in (contact.tags or ""):
+                contact.tags = f"{contact.tags},channel:telegram" if contact.tags else "channel:telegram"
             if first_name and not contact.name:
                 contact.name = first_name
         else:
@@ -77,7 +79,7 @@ async def telegram_webhook(
                 consent_status="opted_in",
                 consent_date=datetime.now(),
                 consent_source="telegram_start",
-                tags="telegram",
+                tags="channel:telegram,auto_opt_in",
             )
             db.add(contact)
 

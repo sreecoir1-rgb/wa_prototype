@@ -33,9 +33,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="WhatsApp Broadcaster",
-    description="Broadcast rate offers and referral offers via WhatsApp Business Cloud API",
-    version="0.1.0",
+    title="OmniBroadcast Pro",
+    description="Enterprise Multi-Channel Broadcast Platform for WhatsApp Cloud API & Telegram Bot",
+    version="0.2.0",
     lifespan=lifespan,
 )
 

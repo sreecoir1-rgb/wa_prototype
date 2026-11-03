@@ -17,7 +17,7 @@ from app.schemas import (
 )
 from app.services.campaign_sender import CampaignSender
 
-router = APIRouter(prefix="/api", tags=["Templates & Campaigns"])
+router = APIRouter(prefix="/api", tags=["Broadcast Campaigns"])
 sender_service = CampaignSender()
 
 

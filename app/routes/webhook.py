@@ -11,7 +11,7 @@ from app.config import settings
 from app.database import get_db
 from app.services.webhook_service import WebhookService, verify_signature
 
-router = APIRouter(tags=["Webhooks"])
+router = APIRouter(tags=["Meta WhatsApp Webhook"])
 webhook_service = WebhookService()
 
 

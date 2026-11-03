@@ -1,163 +1,293 @@
 {% extends "base.html" %}
 
-{% block title %}Campaigns & Rate Offers - WhatsApp Broadcaster{% endblock %}
+{% block title %}Broadcast Studio - OmniBroadcast Pro{% endblock %}
 
 {% block content %}
-<h2>Campaigns & Rate Broadcasts</h2>
+<div style="margin-bottom: 1.5rem;">
+  <h2 style="font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem;">Broadcast Campaign Studio</h2>
+  <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+    Compose, preview, and dispatch multi-channel broadcasts to opted-in audiences.
+  </p>
+</div>
 
-<div class="grid" style="margin-top: 1.5rem;">
-  <!-- Left column: New Campaign & Rate Studio -->
+<div class="grid" style="grid-template-columns: 1.2fr 1fr; gap: 1.5rem; align-items: start;">
+  <!-- Left column: Campaign Composer Form -->
   <div>
-    <article>
-      <header>
-        <h4>Launch a Broadcast</h4>
-        <p style="color: var(--pico-muted-color); font-size: 0.85rem; margin: 0;">
-          Compose and trigger rate offers to opted-in audiences.
-        </p>
-      </header>
+    <article class="pro-card">
+      <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
+        <h4 style="font-weight: 800; margin-bottom: 0.25rem;">Create New Broadcast</h4>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">
+          Targeting <strong>{{ opted_in_count }}</strong> consented subscribers across active channels.
+        </span>
+      </div>
 
       <form method="post" action="/admin/campaigns/send" id="broadcastForm" onsubmit="return confirmBroadcast();">
-        <label for="name">
+        <label for="name" style="font-weight: 700; font-size: 0.85rem; color: var(--text-main);">
           Campaign Name
-          <input type="text" id="name" name="name" placeholder="e.g. Daily Gold Rate Offer - Today" required>
+          <input type="text" id="name" name="name" placeholder="e.g. Diwali Gold Rate Special or Weekend VIP Offer" required style="border-radius: 8px;">
         </label>
 
-        <label for="template_id">
-          WhatsApp Template (Pre-Approved by Meta)
-          <select id="template_id" name="template_id" required onchange="updatePreview();">
+        <!-- Channel Targeting -->
+        <label for="channel_target" style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin-top: 0.75rem;">
+          Target Channel
+          <select id="channel_target" name="channel_target" style="border-radius: 8px;" onchange="updateChannelBadge();">
+            <option value="all">🌐 All Channels (Telegram + WhatsApp)</option>
+            <option value="telegram">✈ Telegram Channel Only</option>
+            <option value="whatsapp">📱 WhatsApp Channel Only</option>
+          </select>
+        </label>
+
+        <!-- Template Selection -->
+        <label for="template_id" style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin-top: 0.75rem;">
+          Message Template
+          <select id="template_id" name="template_id" required onchange="handleTemplateChange();" style="border-radius: 8px;">
             {% for t in templates %}
-            <option value="{{ t.id }}" data-preview="{{ t.body_preview or 'Hello World! Welcome to our official WhatsApp service.' }}">
-              {{ t.name }} ({{ t.language }})
+            <option value="{{ t.id }}" data-preview="{{ t.body_preview or '' }}">
+              📋 {{ t.name }} ({{ t.language }})
             </option>
             {% endfor %}
+            <option value="0" data-custom="true">✍️ Custom Message (Compose Free-form)</option>
           </select>
         </label>
 
-        <label for="rate_offer">
-          Today's Rate / Custom Offer Notes
-          <input type="text" id="rate_offer" name="rate_offer" placeholder="e.g. 24K Gold: ₹7,850/gm (Special 1% off today)" oninput="updatePreview();">
-        </label>
-
-        <label for="audience_filter">
-          Audience Filter
-          <select id="audience_filter" name="audience_filter">
-            <option value="">All Opted-In Contacts ({{ opted_in_count }} eligible)</option>
-            <option value="rates">Only Contacts Tagged 'rates'</option>
-            <option value="vip">Only Contacts Tagged 'vip'</option>
-          </select>
-        </label>
-
-        <fieldset>
-          <label for="dry_run">
-            <input type="checkbox" id="dry_run" name="dry_run" value="true" {% if dry_run_default %}checked{% endif %}>
-            <strong>DRY RUN (Simulation Mode)</strong>
-            <small style="display: block; color: var(--pico-muted-color);">
-              Simulates delivery and logs results without sending real WhatsApp messages. Uncheck only when ready for real sends.
-            </small>
+        <!-- Custom Message Composer (Hidden by default, shown when Custom is selected) -->
+        <div id="customMessageContainer" style="display: none; margin-top: 0.75rem;">
+          <label for="custom_message" style="font-weight: 700; font-size: 0.85rem; color: var(--brand-primary);">
+            Custom Message Body (Free-form)
+            <textarea id="custom_message" name="custom_message" rows="4" placeholder="Write your broadcast announcement, offer details, or alert here..." oninput="updatePreview();" style="border-radius: 8px; margin-top: 0.25rem; font-size: 0.9rem;"></textarea>
           </label>
-        </fieldset>
+          <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: -0.25rem; margin-bottom: 0.5rem;">
+            Tip: Keep messages clear and concise. Telegram supports rich formatting.
+          </small>
+        </div>
 
-        <button type="submit" style="width: 100%; margin-top: 1rem; background: var(--wa-green); border-color: var(--wa-green); color: #000; font-weight: 700;">
-          🚀 Send Broadcast
+        <!-- Optional Rate / Notes -->
+        <label for="rate_offer" style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin-top: 0.75rem;">
+          Offer Subtext / Rate Details (Optional)
+          <input type="text" id="rate_offer" name="rate_offer" placeholder="e.g. Rate: ₹7,850/g (Valid until 6 PM)" oninput="updatePreview();" style="border-radius: 8px;">
+        </label>
+
+        <!-- Audience Filter -->
+        <label for="audience_filter" style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin-top: 0.75rem;">
+          Audience Tag Segment
+          <select id="audience_filter" name="audience_filter" style="border-radius: 8px;">
+            <option value="">All Opted-In Subscribers</option>
+            <option value="rates">Tagged 'rates'</option>
+            <option value="vip">Tagged 'vip'</option>
+            <option value="referrals">Tagged 'referrals'</option>
+          </select>
+        </label>
+
+        <!-- Dry Run Safety Toggle -->
+        <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 0.85rem 1rem; margin-top: 1rem;">
+          <label for="dry_run" style="margin: 0; cursor: pointer; display: flex; align-items: flex-start; gap: 0.5rem;">
+            <input type="checkbox" id="dry_run" name="dry_run" value="true" {% if dry_run_default %}checked{% endif %} style="margin-top: 0.25rem;">
+            <div>
+              <strong style="font-size: 0.85rem; color: var(--text-main);">DRY RUN (Simulation Safeguard)</strong>
+              <small style="display: block; color: var(--text-muted); font-size: 0.75rem; line-height: 1.35;">
+                Simulates delivery and records logs without sending real messages over carrier networks. Uncheck to broadcast live.
+              </small>
+            </div>
+          </label>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1.25rem; padding: 0.85rem; font-size: 1rem;">
+          🚀 Dispatch Broadcast
         </button>
       </form>
     </article>
   </div>
 
-  <!-- Right column: Message Preview & Safeguards -->
+  <!-- Right column: Interactive Smartphone Live Preview -->
   <div>
-    <article>
-      <header>
-        <h4>Live WhatsApp Preview</h4>
-        <p style="color: var(--pico-muted-color); font-size: 0.85rem; margin: 0;">
-          How your message appears on the customer's phone.
-        </p>
-      </header>
+    <article class="pro-card" style="padding: 1.25rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h4 style="font-weight: 800; margin: 0; font-size: 1rem;">Live Subscriber View</h4>
+        <span id="previewChannelBadge" class="badge badge-telegram">✈ Multi-Channel</span>
+      </div>
 
-      <div style="background: #efeae2; padding: 20px; border-radius: 8px; border: 1px solid #d1d7db; min-height: 180px;">
-        <div style="font-size: 0.75rem; color: #667781; text-align: center; margin-bottom: 10px;">TODAY</div>
+      <!-- Smartphone Mockup -->
+      <div class="phone-mockup">
+        <div class="phone-notch"></div>
         
-        <div class="chat-bubble">
-          <div id="previewBody" style="white-space: pre-line;">Hello World! Welcome to our official WhatsApp service.</div>
-          <div id="previewOffer" style="margin-top: 8px; font-weight: 600; color: #1e3a8a;"></div>
-          <div style="text-align: right; font-size: 0.7rem; color: #667781; margin-top: 4px;">12:00 PM ✓✓</div>
+        <!-- Status Bar -->
+        <div style="background: #1e293b; color: #94a3b8; font-size: 0.65rem; padding: 2px 14px 6px; display: flex; justify-content: space-between; font-weight: 600;">
+          <span>9:41 AM</span>
+          <span>5G ●●● 100%</span>
+        </div>
+
+        <!-- App Header Bar inside Phone -->
+        <div style="background: #0f172a; color: white; padding: 8px 12px; display: flex; align-items: center; gap: 8px;">
+          <div style="width: 28px; height: 28px; border-radius: 50%; background: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800;">
+            ⚡
+          </div>
+          <div>
+            <div style="font-weight: 700; font-size: 0.8rem; line-height: 1.1;">OmniBroadcast Alerts</div>
+            <div style="font-size: 0.65rem; color: #94a3b8;">verified business channel</div>
+          </div>
+        </div>
+
+        <!-- Chat Screen Content -->
+        <div class="phone-screen" id="phoneScreen">
+          <div style="text-align: center; margin-bottom: 10px;">
+            <span style="background: rgba(0,0,0,0.06); color: #64748b; font-size: 0.65rem; padding: 2px 8px; border-radius: 999px; font-weight: 600;">
+              TODAY
+            </span>
+          </div>
+
+          <div class="chat-bubble" id="previewBubble">
+            <div id="previewBody" style="white-space: pre-wrap;">Select a template or compose a message...</div>
+            <div id="previewOffer" style="margin-top: 6px; font-weight: 700; color: #4338ca; font-size: 0.82rem;"></div>
+            <div class="chat-time" id="previewTime">Just now ✓✓</div>
+          </div>
         </div>
       </div>
 
-      <div style="margin-top: 1.5rem;">
-        <h5>Compliance Safeguards</h5>
-        <ul style="font-size: 0.85rem; color: var(--pico-muted-color);">
-          <li>✓ <strong>Consent Enforced</strong>: Excludes all pending and opted-out contacts.</li>
-          <li>✓ <strong>Opt-Out Supported</strong>: Any reply of "STOP" opts out the customer immediately.</li>
-          <li>✓ <strong>Paced Dispatch</strong>: Rate-limited to prevent carrier blocking.</li>
+      <!-- Compliance summary -->
+      <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <h6 style="font-weight: 700; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">
+          Compliance & Safety Engine
+        </h6>
+        <ul style="font-size: 0.8rem; color: var(--text-muted); padding-left: 1.2rem; margin: 0;">
+          <li>✓ <strong>Strict Consent Guard:</strong> Automatically skips opted-out contacts.</li>
+          <li>✓ <strong>Instant STOP:</strong> Replying "STOP" unsubscribes immediately via webhook.</li>
+          <li>✓ <strong>Paced Dispatch:</strong> Applies exponential backoff to ensure high delivery rate.</li>
         </ul>
       </div>
     </article>
   </div>
 </div>
 
-<hr style="margin: 3rem 0 2rem;">
+<!-- Past Broadcast Campaigns Table -->
+<div style="margin-top: 2rem;">
+  <h3 style="font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem;">Broadcast History</h3>
+  <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+    Audit trail of all executed campaigns and recipient delivery metrics.
+  </p>
 
-<!-- Past Campaigns Table -->
-<h3>Past Campaigns History</h3>
-<div class="overflow-auto">
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Campaign Name</th>
-        <th>Template</th>
-        <th>Audience Filter</th>
-        <th>Status</th>
-        <th>Messages Logged</th>
-        <th>Created At</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for c in campaigns %}
-      <tr>
-        <td>{{ c.id }}</td>
-        <td><strong>{{ c.name }}</strong></td>
-        <td><code>{{ c.template.name }}</code></td>
-        <td>{{ c.audience_filter or 'All Opted-In' }}</td>
-        <td>
-          <span class="badge badge-{{ c.status }}">
-            {{ c.status }}
-          </span>
-        </td>
-        <td>{{ c.messages|length }} recipients</td>
-        <td>{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-      </tr>
-      {% else %}
-      <tr>
-        <td colspan="7" style="text-align: center; color: var(--pico-muted-color); padding: 1.5rem;">
-          No campaigns sent yet. Create your first broadcast above!
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <article class="pro-card" style="padding: 0; overflow: hidden;">
+    <div class="overflow-auto">
+      <table style="margin-bottom: 0;">
+        <thead style="background: #f8fafc; border-bottom: 1px solid var(--border-color);">
+          <tr>
+            <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">ID</th>
+            <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Campaign Name</th>
+            <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Template / Content</th>
+            <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Audience Filter</th>
+            <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Status</th>
+            <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Recipients Logged</th>
+            <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in campaigns %}
+          <tr style="border-bottom: 1px solid #f1f5f9;">
+            <td style="padding: 0.85rem 1rem; font-size: 0.8rem; color: var(--text-muted);">#{{ c.id }}</td>
+            <td style="padding: 0.85rem 1rem; font-weight: 700; color: var(--text-main);">{{ c.name }}</td>
+            <td style="padding: 0.85rem 1rem;">
+              <code style="background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.8rem; color: #475569;">
+                {{ c.template.name if c.template else 'custom' }}
+              </code>
+            </td>
+            <td style="padding: 0.85rem 1rem; font-size: 0.85rem;">
+              {% if c.audience_filter %}
+                <span style="background: #eef2ff; color: #4338ca; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+                  Tag: {{ c.audience_filter }}
+                </span>
+              {% else %}
+                <span style="color: var(--text-muted); font-size: 0.85rem;">All Opted-In</span>
+              {% endif %}
+            </td>
+            <td style="padding: 0.85rem 1rem;">
+              <span class="badge badge-{{ c.status }}">
+                ● {{ c.status }}
+              </span>
+            </td>
+            <td style="padding: 0.85rem 1rem; font-weight: 600; font-size: 0.85rem;">
+              {{ c.messages|length }} messages
+            </td>
+            <td style="padding: 0.85rem 1rem; font-size: 0.8rem; color: var(--text-muted);">
+              {{ c.created_at.strftime('%Y-%m-%d %H:%M') }}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2.5rem 1rem;">
+              No broadcast campaigns executed yet. Compose your first announcement above!
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </article>
 </div>
 
 <script>
+  function handleTemplateChange() {
+    const select = document.getElementById('template_id');
+    const selectedOption = select.options[select.selectedIndex];
+    const isCustom = selectedOption && selectedOption.getAttribute('data-custom') === 'true';
+    const customContainer = document.getElementById('customMessageContainer');
+
+    if (isCustom) {
+      customContainer.style.display = 'block';
+    } else {
+      customContainer.style.display = 'none';
+    }
+    updatePreview();
+  }
+
   function updatePreview() {
     const select = document.getElementById('template_id');
     const selectedOption = select.options[select.selectedIndex];
-    const previewText = selectedOption ? selectedOption.getAttribute('data-preview') : '';
+    const isCustom = selectedOption && selectedOption.getAttribute('data-custom') === 'true';
+
+    let previewText = '';
+    if (isCustom) {
+      const customInput = document.getElementById('custom_message').value;
+      previewText = customInput.trim() ? customInput : '✍️ Write your custom announcement message...';
+    } else {
+      previewText = selectedOption ? selectedOption.getAttribute('data-preview') : '';
+    }
+
     const rateOffer = document.getElementById('rate_offer').value;
 
     document.getElementById('previewBody').textContent = previewText;
-    document.getElementById('previewOffer').textContent = rateOffer ? 'Offer: ' + rateOffer : '';
+    document.getElementById('previewOffer').textContent = rateOffer ? '📌 Offer Note: ' + rateOffer : '';
+  }
+
+  function updateChannelBadge() {
+    const channelSelect = document.getElementById('channel_target');
+    const val = channelSelect.value;
+    const badge = document.getElementById('previewChannelBadge');
+    const bubble = document.getElementById('previewBubble');
+
+    if (val === 'telegram') {
+      badge.textContent = '✈ Telegram Mode';
+      badge.className = 'badge badge-telegram';
+      bubble.style.borderLeft = '3px solid #0284c7';
+    } else if (val === 'whatsapp') {
+      badge.textContent = '📱 WhatsApp Mode';
+      badge.className = 'badge badge-whatsapp';
+      bubble.style.borderLeft = '3px solid #25D366';
+    } else {
+      badge.textContent = '🌐 Multi-Channel';
+      badge.className = 'badge badge-completed';
+      bubble.style.borderLeft = 'none';
+    }
   }
 
   function confirmBroadcast() {
     const isDryRun = document.getElementById('dry_run').checked;
-    const mode = isDryRun ? "DRY RUN (Simulation)" : "LIVE SEND (Real WhatsApp Messages)";
-    const promptMsg = "⚠️ CONFIRMATION REQUIRED\n\nMode: " + mode + "\n\nAre you sure you want to proceed with this broadcast?";
-    return confirm(promptMsg);
+    const channel = document.getElementById('channel_target').value.toUpperCase();
+    const mode = isDryRun ? "DRY RUN (Simulated - No real network charges)" : "LIVE SEND (Real network dispatch to subscribers)";
+    return confirm("⚡ OMNIBROADCAST PRO - CONFIRM DISPATCH\n\nTarget Channel: " + channel + "\nMode: " + mode + "\n\nDo you want to proceed with this broadcast?");
   }
 
-  // Initial preview on load
-  document.addEventListener('DOMContentLoaded', updatePreview);
+  document.addEventListener('DOMContentLoaded', function() {
+    handleTemplateChange();
+    updateChannelBadge();
+  });
 </script>
 {% endblock %}

@@ -1,94 +1,143 @@
 {% extends "base.html" %}
 
-{% block title %}Contacts - WhatsApp Broadcaster{% endblock %}
+{% block title %}Audience & Contacts - OmniBroadcast Pro{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+<!-- Top Header & Actions -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
   <div>
-    <h2>Contacts & Audience</h2>
-    <p style="color: var(--pico-muted-color); margin: 0;">Total Contacts: {{ contacts|length }}</p>
+    <h2 style="font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem;">Audience & Subscribers</h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Multi-channel customer registry with consent tracking.</p>
   </div>
-  <div>
-    <a href="/admin/contacts/import" role="button" class="outline">+ Import CSV</a>
+  <div style="display: flex; gap: 0.75rem;">
+    <a href="/admin/contacts/import" class="btn-primary" role="button" style="text-decoration: none;">📥 Import CSV</a>
   </div>
 </div>
 
-<!-- Filters -->
-<form method="get" action="/admin/contacts" style="display: flex; gap: 1rem; align-items: flex-end; margin-bottom: 1.5rem;">
-  <div style="flex: 1;">
-    <label for="status">Consent Status</label>
-    <select id="status" name="status">
-      <option value="">All Statuses</option>
-      <option value="opted_in" {% if current_status == 'opted_in' %}selected{% endif %}>Opted In (Eligible for Broadcast)</option>
-      <option value="opted_out" {% if current_status == 'opted_out' %}selected{% endif %}>Opted Out (Excluded)</option>
-      <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending Consent</option>
-    </select>
+<!-- Audience Statistics Grid -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <span class="stat-label">Total Audience</span>
+    <span class="stat-value">{{ stats.total if stats else contacts|length }}</span>
+    <span class="stat-meta">Registered subscribers</span>
   </div>
-  <div style="flex: 1;">
-    <label for="tag">Tag Filter</label>
-    <input type="text" id="tag" name="tag" placeholder="e.g. vip, rates" value="{{ current_tag or '' }}">
+  <div class="stat-card">
+    <span class="stat-label">Opted-In (Broadcast Eligible)</span>
+    <span class="stat-value" style="color: #166534;">{{ stats.opted_in if stats else '—' }}</span>
+    <span class="stat-meta">Passed consent safeguards</span>
   </div>
-  <div>
-    <button type="submit" style="margin-bottom: 0;">Filter</button>
+  <div class="stat-card">
+    <span class="stat-label">Telegram Channel</span>
+    <span class="stat-value" style="color: #0284c7;">{{ stats.telegram if stats else '—' }}</span>
+    <span class="stat-meta">Subscribed via Bot /start</span>
   </div>
-  {% if current_status or current_tag %}
-  <div>
-    <a href="/admin/contacts" role="button" class="secondary outline" style="margin-bottom: 0;">Reset</a>
+  <div class="stat-card">
+    <span class="stat-label">WhatsApp Channel</span>
+    <span class="stat-value" style="color: #15803d;">{{ stats.whatsapp if stats else '—' }}</span>
+    <span class="stat-meta">Direct Cloud API mobile</span>
   </div>
-  {% endif %}
-</form>
-
-<!-- Table -->
-<div class="overflow-auto">
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Phone (E.164)</th>
-        <th>Consent Status</th>
-        <th>Consent Date</th>
-        <th>Tags</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for contact in contacts %}
-      <tr>
-        <td>{{ contact.id }}</td>
-        <td>{{ contact.name or '—' }}</td>
-        <td><code>{{ contact.phone }}</code></td>
-        <td>
-          <span class="badge badge-{{ contact.consent_status }}">
-            {{ contact.consent_status }}
-          </span>
-        </td>
-        <td>
-          {% if contact.consent_date %}
-            {{ contact.consent_date.strftime('%Y-%m-%d %H:%M') }}
-          {% else %}
-            —
-          {% endif %}
-        </td>
-        <td>{{ contact.tags or '—' }}</td>
-        <td>
-          {% if contact.consent_status == 'opted_in' %}
-          <form method="post" action="/admin/contacts/{{ contact.id }}/opt-out" style="margin: 0;" onsubmit="return confirm('Are you sure you want to opt out this contact?');">
-            <button type="submit" class="outline secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Opt Out</button>
-          </form>
-          {% else %}
-          <span style="color: var(--pico-muted-color); font-size: 0.8rem;">None</span>
-          {% endif %}
-        </td>
-      </tr>
-      {% else %}
-      <tr>
-        <td colspan="7" style="text-align: center; color: var(--pico-muted-color); padding: 2rem;">
-          No contacts found. Click <strong><a href="/admin/contacts/import">Import CSV</a></strong> to add contacts.
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
 </div>
+
+<!-- Filter Bar -->
+<article class="pro-card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+  <form method="get" action="/admin/contacts" style="display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 1rem; align-items: flex-end; margin: 0;">
+    <div>
+      <label for="status" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">CONSENT STATUS</label>
+      <select id="status" name="status" style="border-radius: 8px; margin: 0;">
+        <option value="">All Consent Statuses</option>
+        <option value="opted_in" {% if current_status == 'opted_in' %}selected{% endif %}>Opted In (Eligible)</option>
+        <option value="opted_out" {% if current_status == 'opted_out' %}selected{% endif %}>Opted Out (Excluded)</option>
+        <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending Consent</option>
+      </select>
+    </div>
+    <div>
+      <label for="tag" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">AUDIENCE TAG</label>
+      <input type="text" id="tag" name="tag" placeholder="e.g. channel:telegram, vip, rates" value="{{ current_tag or '' }}" style="border-radius: 8px; margin: 0;">
+    </div>
+    <div>
+      <button type="submit" class="btn-primary" style="margin: 0; padding: 0.6rem 1.25rem;">Filter</button>
+    </div>
+    {% if current_status or current_tag %}
+    <div>
+      <a href="/admin/contacts" class="btn-secondary" role="button" style="text-decoration: none; display: inline-block; padding: 0.6rem 1rem; margin: 0;">Reset</a>
+    </div>
+    {% endif %}
+  </form>
+</article>
+
+<!-- Contacts Table Card -->
+<article class="pro-card" style="padding: 0; overflow: hidden;">
+  <div class="overflow-auto">
+    <table style="margin-bottom: 0;">
+      <thead style="background: #f8fafc; border-bottom: 1px solid var(--border-color);">
+        <tr>
+          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Channel</th>
+          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Subscriber</th>
+          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Identifier</th>
+          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Consent</th>
+          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Tags</th>
+          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Registered</th>
+          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for contact in contacts %}
+        <tr style="border-bottom: 1px solid #f1f5f9;">
+          <td style="padding: 0.85rem 1rem;">
+            {% if contact.phone.startswith('tg_') or 'telegram' in (contact.tags or '') %}
+              <span class="badge badge-telegram">✈ Telegram</span>
+            {% else %}
+              <span class="badge badge-whatsapp">📱 WhatsApp</span>
+            {% endif %}
+          </td>
+          <td style="padding: 0.85rem 1rem; font-weight: 600;">
+            {{ contact.name or 'Subscriber #' ~ contact.id }}
+          </td>
+          <td style="padding: 0.85rem 1rem;">
+            <code style="background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.82rem; color: #334155;">{{ contact.phone }}</code>
+          </td>
+          <td style="padding: 0.85rem 1rem;">
+            <span class="badge badge-{{ contact.consent_status }}">
+              ● {{ contact.consent_status }}
+            </span>
+          </td>
+          <td style="padding: 0.85rem 1rem;">
+            {% if contact.tags %}
+              {% for tag_item in contact.tags.split(',') %}
+                <span style="background: #f1f5f9; color: #475569; font-size: 0.72rem; padding: 0.15rem 0.45rem; border-radius: 4px; font-weight: 600; margin-right: 0.25rem;">{{ tag_item.strip() }}</span>
+              {% endfor %}
+            {% else %}
+              <span style="color: var(--text-muted); font-size: 0.8rem;">—</span>
+            {% endif %}
+          </td>
+          <td style="padding: 0.85rem 1rem; font-size: 0.8rem; color: var(--text-muted);">
+            {% if contact.consent_date %}
+              {{ contact.consent_date.strftime('%Y-%m-%d %H:%M') }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td style="padding: 0.85rem 1rem; text-align: right;">
+            {% if contact.consent_status == 'opted_in' %}
+            <form method="post" action="/admin/contacts/{{ contact.id }}/opt-out" style="margin: 0; display: inline;" onsubmit="return confirm('Opt out this contact? They will be excluded from all future broadcasts.');">
+              <button type="submit" class="btn-secondary" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; margin: 0; color: #b91c1c;">Opt Out</button>
+            </form>
+            {% else %}
+            <span style="color: var(--text-muted); font-size: 0.75rem;">Archived</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem 1rem;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">👥</div>
+            <strong>No contacts found matching your criteria.</strong>
+            <p style="font-size: 0.85rem; margin-top: 0.25rem;">Subscribers will appear here when they send <code>/start</code> on Telegram or when you import contacts.</p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</article>
 {% endblock %}

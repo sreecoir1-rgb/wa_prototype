@@ -94,6 +94,11 @@ def admin_contacts_page(
     query = query.order_by(Contact.id.desc())
     contacts = list(db.scalars(query).all())
 
+    total_count = len(contacts)
+    opted_in_count = sum(1 for c in contacts if c.consent_status == "opted_in")
+    telegram_count = sum(1 for c in contacts if c.phone.startswith("tg_") or "telegram" in (c.tags or ""))
+    whatsapp_count = total_count - telegram_count
+
     return templates.TemplateResponse(
         request=request,
         name="contacts.html",
@@ -101,6 +106,12 @@ def admin_contacts_page(
             "contacts": contacts,
             "current_status": status,
             "current_tag": tag,
+            "stats": {
+                "total": total_count,
+                "opted_in": opted_in_count,
+                "telegram": telegram_count,
+                "whatsapp": whatsapp_count,
+            },
             "message": message,
             "error": error,
         },
@@ -170,16 +181,18 @@ def admin_campaigns_page(
     """Renders the Broadcast Studio with template preview and campaign history."""
     require_admin(request)
 
-    # Ensure default 'hello_world' template exists in database
-    existing_template = db.scalar(select(Template).where(Template.name == "hello_world"))
-    if not existing_template:
-        default_tmpl = Template(
-            name="hello_world",
-            language="en_US",
-            body_preview="Hello World! Welcome to our official WhatsApp broadcast service.",
-        )
-        db.add(default_tmpl)
-        db.commit()
+    # Ensure default useful templates exist in database
+    DEFAULT_TEMPLATES = [
+        ("hello_world", "en_US", "👋 Welcome to our official broadcast service. Reply STOP anytime to unsubscribe."),
+        ("rate_alert_daily", "en_US", "📈 Daily Rate Alert: Today's 24K Gold is ₹7,850/g. USD/INR is ₹84.20. Reply to this alert to lock in your preferential rate immediately."),
+        ("referral_reward_v1", "en_US", "🎁 Special Referral Reward: Refer a friend or business partner this month and both of you receive a ₹500 discount voucher on your next booking!"),
+        ("exclusive_vip_offer", "en_US", "🌟 VIP Exclusive: Zero processing fee on all transactions above ₹10,000 this weekend. Valid until Sunday 11:59 PM."),
+        ("system_service_notice", "en_US", "ℹ️ Service Notice: Scheduled system maintenance this Sunday from 2:00 AM to 4:00 AM IST. Broadcast alerts will resume normally at 4:00 AM."),
+    ]
+    for tmpl_name, tmpl_lang, tmpl_body in DEFAULT_TEMPLATES:
+        if not db.scalar(select(Template).where(Template.name == tmpl_name)):
+            db.add(Template(name=tmpl_name, language=tmpl_lang, body_preview=tmpl_body))
+    db.commit()
 
     templates_list = list(db.scalars(select(Template).order_by(Template.id.asc())).all())
     campaigns_list = list(db.scalars(select(Campaign).order_by(Campaign.id.desc())).all())
@@ -210,18 +223,35 @@ def admin_campaign_send(
     template_id: Annotated[int, Form()],
     db: Annotated[Session, Depends(get_db)],
     audience_filter: Annotated[str | None, Form()] = None,
+    channel_target: Annotated[str | None, Form()] = None,
     rate_offer: Annotated[str | None, Form()] = None,
+    custom_message: Annotated[str | None, Form()] = None,
     dry_run: Annotated[str | None, Form()] = None,
 ) -> Response:
     """Executes a campaign broadcast with confirmation and dry-run safety."""
     require_admin(request)
 
-    template = db.get(Template, template_id)
-    if not template:
-        return RedirectResponse(
-            url="/admin/campaigns?error=Selected+template+does+not+exist.",
-            status_code=status.HTTP_303_SEE_OTHER,
-        )
+    # Handle custom message or selected template
+    if template_id == 0 or (custom_message and custom_message.strip()):
+        custom_tmpl = db.scalar(select(Template).where(Template.name == "custom_broadcast"))
+        if not custom_tmpl:
+            custom_tmpl = Template(
+                name="custom_broadcast",
+                language="en_US",
+                body_preview="Custom message composed in studio.",
+            )
+            db.add(custom_tmpl)
+            db.commit()
+            db.refresh(custom_tmpl)
+        template = custom_tmpl
+        template_id = custom_tmpl.id
+    else:
+        template = db.get(Template, template_id)
+        if not template:
+            return RedirectResponse(
+                url="/admin/campaigns?error=Selected+template+does+not+exist.",
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
 
     # Append custom rate offer text to campaign name if provided
     campaign_name = f"{name} ({rate_offer})" if rate_offer else name
@@ -244,6 +274,8 @@ def admin_campaign_send(
             campaign_id=campaign.id,
             db=db,
             dry_run=is_dry_run,
+            custom_message=custom_message.strip() if custom_message else None,
+            channel_filter=channel_target if channel_target in ("telegram", "whatsapp") else None,
         )
         mode_text = "DRY RUN (Simulated)" if summary.dry_run else "LIVE SEND"
         msg = f"Campaign '{summary.campaign_name}' executed in {mode_text} mode! Targeted: {summary.total_targeted}, Sent: {summary.sent_success}."

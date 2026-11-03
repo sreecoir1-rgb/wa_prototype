@@ -22,7 +22,7 @@ from app.schemas import (
 from app.services.phone_utils import normalize_phone_number
 from app.services.whatsapp_client import mask_phone_number
 
-router = APIRouter(prefix="/api/contacts", tags=["Contacts"])
+router = APIRouter(prefix="/api/contacts", tags=["Contacts & Audiences"])
 
 
 @router.post(
