@@ -68,6 +68,8 @@ class Campaign(Base):
     name: Mapped[str] = mapped_column(String(150), nullable=False)
     template_id: Mapped[int] = mapped_column(ForeignKey("templates.id"), nullable=False, index=True)
     audience_filter: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    media_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    media_type: Mapped[str | None] = mapped_column(String(20), nullable=True)  # image, video
     status: Mapped[str] = mapped_column(String(20), default="draft", nullable=False)  # draft, sending, completed, failed
     scheduled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), nullable=False)

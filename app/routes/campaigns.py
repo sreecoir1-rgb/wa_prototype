@@ -89,6 +89,8 @@ def create_campaign(
         name=campaign_in.name,
         template_id=campaign_in.template_id,
         audience_filter=campaign_in.audience_filter,
+        media_url=campaign_in.media_url,
+        media_type=campaign_in.media_type,
         status="draft",
     )
     db.add(campaign)

@@ -2,8 +2,10 @@
 Main FastAPI application entry point.
 """
 import logging
+from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import settings
@@ -46,6 +48,11 @@ app.add_middleware(
     session_cookie="wa_admin_session",
     max_age=14 * 24 * 3600,  # 14 days
 )
+
+# Register static file storage for broadcast media uploads
+UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 # Register route modules
 app.include_router(ui_router)

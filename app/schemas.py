@@ -83,6 +83,8 @@ class CampaignBase(BaseModel):
     name: str
     template_id: int
     audience_filter: str | None = None
+    media_url: str | None = None
+    media_type: str | None = None
 
 
 class CampaignCreate(CampaignBase):

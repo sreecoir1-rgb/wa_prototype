@@ -21,7 +21,7 @@
         </span>
       </div>
 
-      <form method="post" action="/admin/campaigns/send" id="broadcastForm" onsubmit="return confirmBroadcast();">
+      <form method="post" action="/admin/campaigns/send" id="broadcastForm" enctype="multipart/form-data" onsubmit="return confirmBroadcast();">
         <label for="name" style="font-weight: 700; font-size: 0.85rem; color: var(--text-main);">
           Campaign Name
           <input type="text" id="name" name="name" placeholder="e.g. Diwali Gold Rate Special or Weekend VIP Offer" required style="border-radius: 8px;">
@@ -59,6 +59,19 @@
           <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: -0.25rem; margin-bottom: 0.5rem;">
             Tip: Keep messages clear and concise. Telegram supports rich formatting.
           </small>
+        </div>
+
+        <!-- Media Attachment (Picture / Video) -->
+        <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 0.85rem 1rem; margin-top: 0.75rem;">
+          <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin-bottom: 0.35rem; display: block;">
+            📸 Media Attachment (Picture or Video)
+          </label>
+          <input type="file" id="media_file" name="media_file" accept="image/*,video/*" onchange="handleMediaUpload(this);" style="border-radius: 6px; font-size: 0.8rem; margin-bottom: 0.5rem;">
+          
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap;">or Web URL:</span>
+            <input type="url" id="media_url" name="media_url" placeholder="https://example.com/poster.jpg" oninput="handleMediaUrl(this.value);" style="font-size: 0.8rem; border-radius: 6px; padding: 0.35rem 0.65rem; margin: 0; flex: 1;">
+          </div>
         </div>
 
         <!-- Optional Rate / Notes -->
@@ -136,6 +149,11 @@
           </div>
 
           <div class="chat-bubble" id="previewBubble">
+            <!-- Media Attachment Preview -->
+            <div id="mediaPreviewContainer" style="display: none; margin-bottom: 8px; border-radius: 8px; overflow: hidden; background: #000;">
+              <img id="imagePreview" src="" alt="Media Preview" style="width: 100%; max-height: 180px; object-fit: cover; display: none;">
+              <video id="videoPreview" controls style="width: 100%; max-height: 180px; display: none;"></video>
+            </div>
             <div id="previewBody" style="white-space: pre-wrap;">Select a template or compose a message...</div>
             <div id="previewOffer" style="margin-top: 6px; font-weight: 700; color: #4338ca; font-size: 0.82rem;"></div>
             <div class="chat-time" id="previewTime">Just now ✓✓</div>
@@ -283,6 +301,63 @@
     const channel = document.getElementById('channel_target').value.toUpperCase();
     const mode = isDryRun ? "DRY RUN (Simulated - No real network charges)" : "LIVE SEND (Real network dispatch to subscribers)";
     return confirm("⚡ OMNIBROADCAST PRO - CONFIRM DISPATCH\n\nTarget Channel: " + channel + "\nMode: " + mode + "\n\nDo you want to proceed with this broadcast?");
+  }
+
+  function handleMediaUpload(input) {
+    const file = input.files && input.files[0];
+    const container = document.getElementById('mediaPreviewContainer');
+    const img = document.getElementById('imagePreview');
+    const vid = document.getElementById('videoPreview');
+
+    if (!file) {
+      container.style.display = 'none';
+      img.style.display = 'none';
+      vid.style.display = 'none';
+      return;
+    }
+
+    const isVideo = file.type.startsWith('video/');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      container.style.display = 'block';
+      if (isVideo) {
+        img.style.display = 'none';
+        vid.src = e.target.result;
+        vid.style.display = 'block';
+      } else {
+        vid.style.display = 'none';
+        img.src = e.target.result;
+        img.style.display = 'block';
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleMediaUrl(url) {
+    const container = document.getElementById('mediaPreviewContainer');
+    const img = document.getElementById('imagePreview');
+    const vid = document.getElementById('videoPreview');
+
+    if (!url || !url.trim()) {
+      container.style.display = 'none';
+      img.style.display = 'none';
+      vid.style.display = 'none';
+      return;
+    }
+
+    const cleanUrl = url.trim();
+    const isVideo = cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.mov') || cleanUrl.endsWith('.webm');
+    container.style.display = 'block';
+
+    if (isVideo) {
+      img.style.display = 'none';
+      vid.src = cleanUrl;
+      vid.style.display = 'block';
+    } else {
+      vid.style.display = 'none';
+      img.src = cleanUrl;
+      img.style.display = 'block';
+    }
   }
 
   document.addEventListener('DOMContentLoaded', function() {

@@ -77,3 +77,33 @@ def test_telegram_client_api_error_handling(monkeypatch):
 
     assert exc_info.value.status_code == 403
     assert "bot was blocked by the user" in str(exc_info.value)
+
+
+def test_telegram_client_send_photo_dry_run():
+    """Verifies photo simulation in dry-run mode."""
+    client = TelegramClient(bot_token="test_fake_token", dry_run=True)
+    res = client.send_photo(chat_id="12345", photo="https://example.com/pic.jpg", caption="Special Offer")
+    assert res["dry_run"] is True
+    assert res["message_id"] == "simulated_tg_photo_id"
+    assert res["ok"] is True
+
+
+def test_telegram_client_send_video_mock(monkeypatch):
+    """Verifies video dispatch payload and response parsing."""
+    client = TelegramClient(bot_token="test_fake_token", dry_run=False)
+
+    fake_response = httpx.Response(
+        200,
+        json={"ok": True, "result": {"message_id": 888}},
+        request=httpx.Request("POST", "https://api.telegram.org"),
+    )
+
+    def mock_post(*args, **kwargs):
+        return fake_response
+
+    monkeypatch.setattr(httpx.Client, "post", mock_post)
+
+    res = client.send_video(chat_id="12345", video="https://example.com/promo.mp4", caption="Promo Video")
+    assert res["dry_run"] is False
+    assert res["message_id"] == "888"
+    assert res["ok"] is True

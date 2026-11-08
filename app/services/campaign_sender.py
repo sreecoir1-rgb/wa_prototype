@@ -91,7 +91,13 @@ class CampaignSender:
                     if is_telegram:
                         raw_chat_id = contact.phone.replace("tg_", "")
                         msg_text = custom_message or (campaign.template.body_preview if campaign.template else None) or f"📢 <b>{campaign.name}</b>"
-                        tg_res = tg_client.send_message(chat_id=raw_chat_id, text=msg_text)
+                        if campaign.media_url:
+                            if campaign.media_type == "video":
+                                tg_res = tg_client.send_video(chat_id=raw_chat_id, video=campaign.media_url, caption=msg_text)
+                            else:
+                                tg_res = tg_client.send_photo(chat_id=raw_chat_id, photo=campaign.media_url, caption=msg_text)
+                        else:
+                            tg_res = tg_client.send_message(chat_id=raw_chat_id, text=msg_text)
                         wamid = f"tg_{tg_res.get('message_id', 'simulated')}"
                     else:
                         tmpl_name = campaign.template.name if campaign.template else "hello_world"

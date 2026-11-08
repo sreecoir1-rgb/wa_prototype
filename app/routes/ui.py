@@ -1,6 +1,7 @@
 """
 Server-rendered UI controllers for Admin dashboard, authentication, contacts, and campaigns.
 """
+import uuid
 from typing import Annotated
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response, UploadFile, File, status
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -23,6 +24,8 @@ from app.routes.contacts import import_contacts_csv
 
 router = APIRouter(include_in_schema=False)
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
+UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 campaign_sender = CampaignSender()
 
@@ -217,7 +220,7 @@ def admin_campaigns_page(
 
 
 @router.post("/admin/campaigns/send")
-def admin_campaign_send(
+async def admin_campaign_send(
     request: Request,
     name: Annotated[str, Form()],
     template_id: Annotated[int, Form()],
@@ -226,10 +229,33 @@ def admin_campaign_send(
     channel_target: Annotated[str | None, Form()] = None,
     rate_offer: Annotated[str | None, Form()] = None,
     custom_message: Annotated[str | None, Form()] = None,
+    media_url: Annotated[str | None, Form()] = None,
+    media_file: Annotated[UploadFile | None, File()] = None,
     dry_run: Annotated[str | None, Form()] = None,
 ) -> Response:
     """Executes a campaign broadcast with confirmation and dry-run safety."""
     require_admin(request)
+
+    # Process media attachment if provided
+    final_media_url = None
+    final_media_type = None
+
+    if media_file and media_file.filename:
+        ext = Path(media_file.filename).suffix.lower()
+        is_video = ext in {".mp4", ".mov", ".avi", ".mkv", ".webm"}
+        unique_name = f"{uuid.uuid4().hex[:8]}_{media_file.filename}"
+        saved_path = UPLOAD_DIR / unique_name
+
+        file_bytes = await media_file.read()
+        if file_bytes:
+            with open(saved_path, "wb") as f:
+                f.write(file_bytes)
+            final_media_url = str(saved_path)
+            final_media_type = "video" if is_video else "image"
+    elif media_url and media_url.strip():
+        final_media_url = media_url.strip()
+        ext = Path(final_media_url.split("?")[0]).suffix.lower()
+        final_media_type = "video" if ext in {".mp4", ".mov", ".webm"} else "image"
 
     # Handle custom message or selected template
     if template_id == 0 or (custom_message and custom_message.strip()):
@@ -260,6 +286,8 @@ def admin_campaign_send(
         name=campaign_name,
         template_id=template_id,
         audience_filter=audience_filter or None,
+        media_url=final_media_url,
+        media_type=final_media_type,
         status="draft",
     )
     db.add(campaign)

@@ -4,6 +4,7 @@ Handles outbound messaging, dry-run simulations, and webhook management.
 Follows the same interface conventions as WhatsAppClient for multi-channel support.
 """
 import logging
+from pathlib import Path
 from typing import Any
 import httpx
 
@@ -122,6 +123,146 @@ class TelegramClient:
 
         except httpx.RequestError as exc:
             logger.error(f"Network error connecting to Telegram API: {exc}")
+            raise TelegramAPIError(f"Network error: {str(exc)}")
+
+    def send_photo(
+        self,
+        chat_id: str | int,
+        photo: str,
+        caption: str | None = None,
+        parse_mode: str = "HTML",
+    ) -> dict[str, Any]:
+        """
+        Sends a photo with optional caption to a Telegram chat.
+        'photo' can be a public URL or a local file path.
+        """
+        chat_id_str = str(chat_id).strip()
+        masked_id = mask_chat_id(chat_id_str)
+
+        if self.dry_run:
+            print("=" * 60)
+            print(" [DRY RUN ACTIVE] Telegram photo send simulation")
+            print("=" * 60)
+            print(f" Recipient Chat ID: {masked_id}")
+            print(f" Photo:             {photo}")
+            print(f" Caption:           {caption}")
+            print(" Result:            Simulated success (no real HTTP call was made)")
+            print("=" * 60)
+            return {
+                "dry_run": True,
+                "provider": "telegram",
+                "chat_id": chat_id_str,
+                "message_id": "simulated_tg_photo_id",
+                "ok": True,
+            }
+
+        if not self.bot_token or self.bot_token == "your_telegram_bot_token_from_botfather":
+            raise TelegramAPIError("TELEGRAM_BOT_TOKEN is not configured in environment.")
+
+        endpoint = f"{self.base_url}/sendPhoto"
+        is_url = photo.startswith("http://") or photo.startswith("https://")
+
+        try:
+            with httpx.Client(timeout=25.0) as client:
+                if is_url:
+                    payload = {
+                        "chat_id": chat_id_str,
+                        "photo": photo,
+                        "caption": caption or "",
+                        "parse_mode": parse_mode,
+                    }
+                    response = client.post(endpoint, json=payload)
+                else:
+                    file_path = Path(photo)
+                    if not file_path.exists():
+                        raise TelegramAPIError(f"Local photo file not found: {photo}")
+                    with open(file_path, "rb") as f:
+                        response = client.post(
+                            endpoint,
+                            data={"chat_id": chat_id_str, "caption": caption or "", "parse_mode": parse_mode},
+                            files={"photo": (file_path.name, f.read())},
+                        )
+
+                data = response.json()
+                if not response.is_success or not data.get("ok"):
+                    error_desc = data.get("description", response.text)
+                    error_code = data.get("error_code", response.status_code)
+                    raise TelegramAPIError(f"Telegram API error: {error_desc}", response.status_code, error_code)
+
+                result = data.get("result", {})
+                message_id = str(result.get("message_id", ""))
+                return {"dry_run": False, "provider": "telegram", "chat_id": chat_id_str, "message_id": message_id, "ok": True}
+        except httpx.RequestError as exc:
+            raise TelegramAPIError(f"Network error: {str(exc)}")
+
+    def send_video(
+        self,
+        chat_id: str | int,
+        video: str,
+        caption: str | None = None,
+        parse_mode: str = "HTML",
+    ) -> dict[str, Any]:
+        """
+        Sends a video with optional caption to a Telegram chat.
+        'video' can be a public URL or a local file path.
+        """
+        chat_id_str = str(chat_id).strip()
+        masked_id = mask_chat_id(chat_id_str)
+
+        if self.dry_run:
+            print("=" * 60)
+            print(" [DRY RUN ACTIVE] Telegram video send simulation")
+            print("=" * 60)
+            print(f" Recipient Chat ID: {masked_id}")
+            print(f" Video:             {video}")
+            print(f" Caption:           {caption}")
+            print(" Result:            Simulated success (no real HTTP call was made)")
+            print("=" * 60)
+            return {
+                "dry_run": True,
+                "provider": "telegram",
+                "chat_id": chat_id_str,
+                "message_id": "simulated_tg_video_id",
+                "ok": True,
+            }
+
+        if not self.bot_token or self.bot_token == "your_telegram_bot_token_from_botfather":
+            raise TelegramAPIError("TELEGRAM_BOT_TOKEN is not configured in environment.")
+
+        endpoint = f"{self.base_url}/sendVideo"
+        is_url = video.startswith("http://") or video.startswith("https://")
+
+        try:
+            with httpx.Client(timeout=35.0) as client:
+                if is_url:
+                    payload = {
+                        "chat_id": chat_id_str,
+                        "video": video,
+                        "caption": caption or "",
+                        "parse_mode": parse_mode,
+                    }
+                    response = client.post(endpoint, json=payload)
+                else:
+                    file_path = Path(video)
+                    if not file_path.exists():
+                        raise TelegramAPIError(f"Local video file not found: {video}")
+                    with open(file_path, "rb") as f:
+                        response = client.post(
+                            endpoint,
+                            data={"chat_id": chat_id_str, "caption": caption or "", "parse_mode": parse_mode},
+                            files={"video": (file_path.name, f.read())},
+                        )
+
+                data = response.json()
+                if not response.is_success or not data.get("ok"):
+                    error_desc = data.get("description", response.text)
+                    error_code = data.get("error_code", response.status_code)
+                    raise TelegramAPIError(f"Telegram API error: {error_desc}", response.status_code, error_code)
+
+                result = data.get("result", {})
+                message_id = str(result.get("message_id", ""))
+                return {"dry_run": False, "provider": "telegram", "chat_id": chat_id_str, "message_id": message_id, "ok": True}
+        except httpx.RequestError as exc:
             raise TelegramAPIError(f"Network error: {str(exc)}")
 
     def set_webhook(self, webhook_url: str) -> dict[str, Any]:

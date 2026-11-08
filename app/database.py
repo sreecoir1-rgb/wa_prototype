@@ -3,7 +3,7 @@ Database connection, session management, and base declarative class for SQLAlche
 Supports both SQLite (local development) and PostgreSQL (Supabase / Render / Cloud production).
 """
 from typing import Generator
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
 
 from app.config import settings
@@ -72,9 +72,18 @@ def init_db() -> None:
     if normalized_db_url.startswith("sqlite"):
         Base.metadata.create_all(bind=engine)
     else:
-        # In PostgreSQL/production, tables are managed via Alembic migrations.
-        # We run create_all only as a safe fallback if tables don't exist.
         try:
             Base.metadata.create_all(bind=engine, checkfirst=True)
         except Exception:
             pass
+
+    # Ensure optional media columns exist in existing databases without requiring full migrations
+    with engine.begin() as conn:
+        for col_def in [
+            "ALTER TABLE campaigns ADD COLUMN media_url VARCHAR(500)",
+            "ALTER TABLE campaigns ADD COLUMN media_type VARCHAR(20)",
+        ]:
+            try:
+                conn.execute(text(col_def))
+            except Exception:
+                pass
