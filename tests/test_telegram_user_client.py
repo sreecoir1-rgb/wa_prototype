@@ -46,14 +46,23 @@ def test_telegram_user_client_missing_credentials():
 
 def test_telegram_user_client_missing_session():
     """Verifies that attempting real send without an authenticated session raises helpful error."""
+    dummy_session = "nonexistent_test_session_xyz"
+    session_file = Path(__file__).resolve().parent.parent / f"{dummy_session}.session"
+    if session_file.exists():
+        session_file.unlink()
+
     client = TelegramUserClient(
         api_id=9999999,
         api_hash="abcdef1234567890abcdef1234567890",
-        session_name="nonexistent_test_session_xyz",
+        session_name=dummy_session,
         dry_run=False,
     )
 
-    with pytest.raises(TelegramUserAPIError) as exc_info:
-        client.send_message(to_phone="+919876543210", text="Test")
+    try:
+        with pytest.raises(TelegramUserAPIError) as exc_info:
+            client.send_message(to_phone="+919876543210", text="Test")
 
-    assert "Personal Telegram session not found" in str(exc_info.value)
+        assert "Personal Telegram session not found" in str(exc_info.value)
+    finally:
+        if session_file.exists():
+            session_file.unlink()

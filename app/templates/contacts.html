@@ -7,10 +7,15 @@
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
   <div>
     <h2 style="font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem;">Audience & Subscribers</h2>
-    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Multi-channel customer registry with consent tracking.</p>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Multi-channel customer registry with consent tracking & direct messaging.</p>
   </div>
   <div style="display: flex; gap: 0.75rem;">
-    <a href="/admin/contacts/import" class="btn-primary" role="button" style="text-decoration: none;">📥 Import CSV</a>
+    <button type="button" onclick="openAddContactModal();" class="btn-primary" style="margin: 0; padding: 0.6rem 1.25rem; font-size: 0.9rem;">
+      ➕ Add Single Contact
+    </button>
+    <a href="/admin/contacts/import" class="btn-secondary" role="button" style="text-decoration: none; padding: 0.6rem 1.15rem; font-size: 0.9rem;">
+      📥 Import CSV
+    </a>
   </div>
 </div>
 
@@ -29,7 +34,7 @@
   <div class="stat-card">
     <span class="stat-label">Telegram Channel</span>
     <span class="stat-value" style="color: #0284c7;">{{ stats.telegram if stats else '—' }}</span>
-    <span class="stat-meta">Subscribed via Bot /start</span>
+    <span class="stat-meta">Subscribed via Bot / Phone</span>
   </div>
   <div class="stat-card">
     <span class="stat-label">WhatsApp Channel</span>
@@ -73,7 +78,7 @@
         <tr>
           <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Channel</th>
           <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Subscriber</th>
-          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Identifier</th>
+          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Phone Number</th>
           <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Consent</th>
           <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Tags</th>
           <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Registered</th>
@@ -87,14 +92,14 @@
             {% if contact.phone.startswith('tg_') or 'telegram' in (contact.tags or '') %}
               <span class="badge badge-telegram">✈ Telegram</span>
             {% else %}
-              <span class="badge badge-whatsapp">📱 WhatsApp</span>
+              <span class="badge badge-whatsapp">📱 WhatsApp / TG</span>
             {% endif %}
           </td>
           <td style="padding: 0.85rem 1rem; font-weight: 600;">
             {{ contact.name or 'Subscriber #' ~ contact.id }}
           </td>
           <td style="padding: 0.85rem 1rem;">
-            <code style="background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.82rem; color: #334155;">{{ contact.phone }}</code>
+            <code style="background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.82rem; color: #334155; font-weight: 700;">{{ contact.phone }}</code>
           </td>
           <td style="padding: 0.85rem 1rem;">
             <span class="badge badge-{{ contact.consent_status }}">
@@ -117,7 +122,10 @@
               —
             {% endif %}
           </td>
-          <td style="padding: 0.85rem 1rem; text-align: right;">
+          <td style="padding: 0.85rem 1rem; text-align: right; white-space: nowrap;">
+            <button type="button" onclick="openDirectMessageModal('{{ contact.id }}', '{{ contact.name or contact.phone }}', '{{ contact.phone }}');" class="btn-secondary" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; margin: 0 0.35rem 0 0; color: #4338ca; font-weight: 700;">
+              💬 Message
+            </button>
             {% if contact.consent_status == 'opted_in' %}
             <form method="post" action="/admin/contacts/{{ contact.id }}/opt-out" style="margin: 0; display: inline;" onsubmit="return confirm('Opt out this contact? They will be excluded from all future broadcasts.');">
               <button type="submit" class="btn-secondary" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; margin: 0; color: #b91c1c;">Opt Out</button>
@@ -132,7 +140,7 @@
           <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem 1rem;">
             <div style="font-size: 2rem; margin-bottom: 0.5rem;">👥</div>
             <strong>No contacts found matching your criteria.</strong>
-            <p style="font-size: 0.85rem; margin-top: 0.25rem;">Subscribers will appear here when they send <code>/start</code> on Telegram or when you import contacts.</p>
+            <p style="font-size: 0.85rem; margin-top: 0.25rem;">Click <strong>+ Add Single Contact</strong> or import a CSV to populate your audience.</p>
           </td>
         </tr>
         {% endfor %}
@@ -140,4 +148,143 @@
     </table>
   </div>
 </article>
+
+<!-- ======================================================== -->
+<!-- MODAL 1: ADD SINGLE CONTACT                              -->
+<!-- ======================================================== -->
+<dialog id="addContactModal" style="border-radius: 14px; border: 1px solid var(--border-color); padding: 1.5rem; max-width: 480px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
+    <h4 style="margin: 0; font-weight: 800; font-size: 1.15rem;">➕ Add Single Contact</h4>
+    <button type="button" onclick="closeAddContactModal();" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted); padding: 0; line-height: 1;">&times;</button>
+  </div>
+
+  <form method="post" action="/admin/contacts/new">
+    <label for="contact_name" style="font-weight: 700; font-size: 0.85rem;">
+      Customer Name (Optional)
+      <input type="text" id="contact_name" name="name" placeholder="e.g. Rahul Sharma" style="border-radius: 8px;">
+    </label>
+
+    <label for="contact_phone" style="font-weight: 700; font-size: 0.85rem; margin-top: 0.75rem;">
+      Customer Phone Number (Required)
+      <input type="text" id="contact_phone" name="phone" placeholder="e.g. +919876543210 or 9876543210" required style="border-radius: 8px;">
+      <small style="display: block; color: var(--text-muted); font-size: 0.75rem; margin-top: -0.25rem; margin-bottom: 0.5rem;">
+        Used universally for WhatsApp, Telegram User account, and Bot. Auto-formatted to E.164.
+      </small>
+    </label>
+
+    <label for="contact_status" style="font-weight: 700; font-size: 0.85rem; margin-top: 0.5rem;">
+      Initial Consent Status
+      <select id="contact_status" name="consent_status" style="border-radius: 8px;">
+        <option value="opted_in" selected>Opted In (Eligible for Broadcasts immediately)</option>
+        <option value="pending">Pending Consent (Must confirm before receiving)</option>
+        <option value="opted_out">Opted Out</option>
+      </select>
+    </label>
+
+    <label for="contact_tags" style="font-weight: 700; font-size: 0.85rem; margin-top: 0.75rem;">
+      Audience Tags (Comma separated)
+      <input type="text" id="contact_tags" name="tags" placeholder="e.g. vip, rates, daily" style="border-radius: 8px;">
+    </label>
+
+    <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+      <button type="button" onclick="closeAddContactModal();" class="btn-secondary" style="margin: 0; padding: 0.6rem 1.25rem;">Cancel</button>
+      <button type="submit" class="btn-primary" style="margin: 0; padding: 0.6rem 1.5rem;">Save Contact</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ======================================================== -->
+<!-- MODAL 2: DIRECT MESSAGE SINGLE CONTACT                   -->
+<!-- ======================================================== -->
+<dialog id="directMessageModal" style="border-radius: 14px; border: 1px solid var(--border-color); padding: 1.5rem; max-width: 520px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
+    <div>
+      <h4 style="margin: 0; font-weight: 800; font-size: 1.15rem;">💬 Send Direct Message</h4>
+      <div id="dmRecipientName" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;"></div>
+    </div>
+    <button type="button" onclick="closeDirectMessageModal();" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted); padding: 0; line-height: 1;">&times;</button>
+  </div>
+
+  <form id="dmForm" method="post" action="" enctype="multipart/form-data">
+    <label for="dm_channel" style="font-weight: 700; font-size: 0.85rem;">
+      Send Via Channel
+      <select id="dm_channel" name="channel" style="border-radius: 8px;">
+        <option value="telegram_user" selected>👤 My Telegram Account (Direct to Customer's Phone)</option>
+        <option value="whatsapp">📱 WhatsApp Cloud API (Standard Template)</option>
+        <option value="telegram_bot">✈ Telegram Bot API</option>
+      </select>
+    </label>
+
+    <label for="dm_text" style="font-weight: 700; font-size: 0.85rem; margin-top: 0.75rem;">
+      Message Text
+      <textarea id="dm_text" name="message_text" rows="3" placeholder="Type your direct message, rate quotation, or announcement..." required style="border-radius: 8px; font-size: 0.9rem;"></textarea>
+    </label>
+
+    <!-- Optional Media -->
+    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem;">
+      <label style="font-weight: 700; font-size: 0.8rem; color: var(--text-main); margin-bottom: 0.25rem; display: block;">
+        Attach Image or Video (Optional)
+      </label>
+      <input type="file" name="media_file" accept="image/*,video/*" style="font-size: 0.8rem; margin-bottom: 0.35rem;">
+      <input type="url" name="media_url" placeholder="or paste web image/video URL..." style="font-size: 0.8rem; border-radius: 6px; padding: 0.35rem 0.5rem; margin: 0;">
+    </div>
+
+    <!-- Dry run checkbox -->
+    <div style="margin-top: 0.85rem;">
+      <label style="font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; margin: 0;">
+        <input type="checkbox" id="dm_dry_run" name="dry_run" value="true">
+        <span><strong>DRY RUN (Simulated)</strong> — Log without dispatching real network message</span>
+      </label>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
+      <button type="button" onclick="closeDirectMessageModal();" class="btn-secondary" style="margin: 0; padding: 0.6rem 1.25rem;">Cancel</button>
+      <button type="submit" class="btn-primary" style="margin: 0; padding: 0.6rem 1.5rem;">🚀 Send Now</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  function openAddContactModal() {
+    const dialog = document.getElementById('addContactModal');
+    if (typeof dialog.showModal === 'function') {
+      dialog.showModal();
+    } else {
+      dialog.setAttribute('open', 'true');
+    }
+  }
+
+  function closeAddContactModal() {
+    const dialog = document.getElementById('addContactModal');
+    if (typeof dialog.close === 'function') {
+      dialog.close();
+    } else {
+      dialog.removeAttribute('open');
+    }
+  }
+
+  function openDirectMessageModal(contactId, name, phone) {
+    const dialog = document.getElementById('directMessageModal');
+    const form = document.getElementById('dmForm');
+    const nameEl = document.getElementById('dmRecipientName');
+
+    form.action = '/admin/contacts/' + contactId + '/direct-message';
+    nameEl.textContent = 'Recipient: ' + name + ' (' + phone + ')';
+
+    if (typeof dialog.showModal === 'function') {
+      dialog.showModal();
+    } else {
+      dialog.setAttribute('open', 'true');
+    }
+  }
+
+  function closeDirectMessageModal() {
+    const dialog = document.getElementById('directMessageModal');
+    if (typeof dialog.close === 'function') {
+      dialog.close();
+    } else {
+      dialog.removeAttribute('open');
+    }
+  }
+</script>
 {% endblock %}

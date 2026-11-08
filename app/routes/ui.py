@@ -6,12 +6,17 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response, UploadFile, File, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from datetime import datetime
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
-from app.models import Contact, Template, Campaign
+from app.models import Contact, Template, Campaign, MessageLog
+from app.services.phone_utils import normalize_phone_number
+from app.services.whatsapp_client import WhatsAppClient, mask_phone_number
+from app.services.telegram_client import TelegramClient
+from app.services.telegram_user_client import TelegramUserClient
 from app.services.auth_service import (
     verify_password,
     get_admin_password_hash,
@@ -119,6 +124,129 @@ def admin_contacts_page(
             "error": error,
         },
     )
+
+
+@router.post("/admin/contacts/new")
+def admin_create_single_contact(
+    request: Request,
+    phone: Annotated[str, Form()],
+    db: Annotated[Session, Depends(get_db)],
+    name: Annotated[str | None, Form()] = None,
+    consent_status: Annotated[str, Form()] = "opted_in",
+    consent_source: Annotated[str | None, Form()] = "admin_dashboard",
+    tags: Annotated[str | None, Form()] = None,
+) -> Response:
+    """Creates a single contact directly from the dashboard."""
+    require_admin(request)
+
+    try:
+        normalized_phone = normalize_phone_number(phone)
+    except ValueError as exc:
+        return RedirectResponse(
+            url=f"/admin/contacts?error={str(exc)}",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    existing = db.scalar(select(Contact).where(Contact.phone == normalized_phone))
+    if existing:
+        masked = mask_phone_number(normalized_phone)
+        return RedirectResponse(
+            url=f"/admin/contacts?error=Contact+with+phone+{masked}+already+exists.",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    consent_date = datetime.now() if consent_status == "opted_in" else None
+    new_contact = Contact(
+        name=name.strip() if name and name.strip() else None,
+        phone=normalized_phone,
+        consent_status=consent_status,
+        consent_date=consent_date,
+        consent_source=consent_source or "admin_dashboard",
+        tags=tags.strip() if tags and tags.strip() else None,
+    )
+    db.add(new_contact)
+    db.commit()
+
+    return RedirectResponse(
+        url="/admin/contacts?message=Contact+successfully+added!",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/admin/contacts/{contact_id}/direct-message")
+async def admin_direct_message_contact(
+    request: Request,
+    contact_id: int,
+    channel: Annotated[str, Form()],
+    message_text: Annotated[str, Form()],
+    db: Annotated[Session, Depends(get_db)],
+    media_url: Annotated[str | None, Form()] = None,
+    media_file: Annotated[UploadFile | None, File()] = None,
+    dry_run: Annotated[str | None, Form()] = None,
+) -> Response:
+    """Sends a direct message directly to a contact's phone number."""
+    require_admin(request)
+
+    contact = db.get(Contact, contact_id)
+    if not contact:
+        return RedirectResponse(
+            url="/admin/contacts?error=Contact+not+found.",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    is_dry_run = dry_run == "true"
+    final_media_path = None
+
+    if media_file and media_file.filename:
+        unique_name = f"{uuid.uuid4().hex[:8]}_{media_file.filename}"
+        saved_path = UPLOAD_DIR / unique_name
+        file_bytes = await media_file.read()
+        if file_bytes:
+            with open(saved_path, "wb") as f:
+                f.write(file_bytes)
+            final_media_path = str(saved_path)
+    elif media_url and media_url.strip():
+        final_media_path = media_url.strip()
+
+    try:
+        if channel == "telegram_user":
+            user_client = TelegramUserClient(dry_run=is_dry_run)
+            result = await user_client.send_message_async(to_phone=contact.phone, text=message_text, media_path=final_media_path)
+            wamid = f"tg_user_{result.get('message_id', 'simulated')}"
+        elif channel == "whatsapp":
+            wa_client = WhatsAppClient(dry_run=is_dry_run)
+            result = wa_client.send_template(to_phone=contact.phone, template_name="hello_world")
+            messages = result.get("messages", [])
+            wamid = messages[0].get("id") if messages else ("simulated_wamid" if is_dry_run else None)
+        else:
+            # telegram_bot
+            tg_client = TelegramClient(dry_run=is_dry_run)
+            raw_chat_id = contact.phone.replace("tg_", "")
+            if final_media_path:
+                result = tg_client.send_photo(chat_id=raw_chat_id, photo=final_media_path, caption=message_text)
+            else:
+                result = tg_client.send_message(chat_id=raw_chat_id, text=message_text)
+            wamid = f"tg_{result.get('message_id', 'simulated')}"
+
+        status_str = "simulated" if is_dry_run else "sent"
+        log_entry = MessageLog(
+            contact_id=contact.id,
+            whatsapp_message_id=wamid,
+            status=status_str,
+        )
+        db.add(log_entry)
+        db.commit()
+
+        mode_text = "DRY RUN (Simulated)" if is_dry_run else "Sent"
+        return RedirectResponse(
+            url=f"/admin/contacts?message=Message+{mode_text}+to+{contact.name or contact.phone}!",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    except Exception as exc:
+        return RedirectResponse(
+            url=f"/admin/contacts?error={str(exc)}",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
 
 
 @router.post("/admin/contacts/{contact_id}/opt-out")

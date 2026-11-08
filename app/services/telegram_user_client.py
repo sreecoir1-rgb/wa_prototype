@@ -71,18 +71,34 @@ class TelegramUserClient:
                     "Telegram session is not authorized. Run 'python scripts/login_telegram_user.py' once to log in."
                 )
 
-            # Resolve peer by phone number
-            recipient = to_phone.strip()
-            # If input is formatted like tg_12345, convert to integer chat id
-            if recipient.startswith("tg_"):
-                recipient = int(recipient.replace("tg_", ""))
+            # Resolve peer by phone number directly (no IDs needed)
+            from telethon.tl.functions.contacts import ImportContactsRequest
+            from telethon.tl.types import InputPhoneContact
+
+            raw_recipient = str(to_phone).strip()
+            target_peer = None
+
+            if raw_recipient.startswith("tg_"):
+                target_peer = int(raw_recipient.replace("tg_", ""))
+            else:
+                phone_digits = raw_recipient if raw_recipient.startswith("+") else f"+{raw_recipient}"
+                try:
+                    target_peer = await client.get_input_entity(phone_digits)
+                except Exception:
+                    # Import contact so Telegram MTProto can resolve the phone number
+                    contact_req = InputPhoneContact(client_id=0, phone=phone_digits, first_name="Subscriber", last_name="")
+                    imported = await client(ImportContactsRequest([contact_req]))
+                    if imported.users:
+                        target_peer = imported.users[0]
+                    else:
+                        raise TelegramUserAPIError(f"Phone number {phone_digits} is not registered on Telegram.")
 
             file_attachment = None
             if media_path and Path(media_path).exists():
                 file_attachment = media_path
 
             sent_msg = await client.send_message(
-                recipient,
+                target_peer,
                 text,
                 file=file_attachment,
             )
@@ -113,15 +129,27 @@ class TelegramUserClient:
         finally:
             await client.disconnect()
 
-    def send_message(
+    def _validate_ready(self) -> None:
+        """Validates that MTProto API credentials and an authorized session file exist."""
+        if not self.api_id or not self.api_hash:
+            raise TelegramUserAPIError(
+                "TELEGRAM_API_ID and TELEGRAM_API_HASH are not set in .env. Obtain them from https://my.telegram.org."
+            )
+
+        if not self.is_session_authorized():
+            raise TelegramUserAPIError(
+                "Personal Telegram session not found. Please run 'python scripts/login_telegram_user.py' once to log in."
+            )
+
+    async def send_message_async(
         self,
         to_phone: str,
         text: str,
         media_path: str | None = None,
     ) -> dict[str, Any]:
         """
-        Sends a message to a recipient phone number from your personal Telegram account.
-        In DRY_RUN mode, prints a simulation box without network requests.
+        Asynchronously sends a message to a recipient phone number from your personal Telegram account.
+        In DRY_RUN mode, returns simulated success without network requests.
         """
         masked = mask_phone_number(str(to_phone))
 
@@ -146,20 +174,51 @@ class TelegramUserClient:
             }
 
         # 2. REAL SEND MODE
-        if not self.api_id or not self.api_hash:
-            raise TelegramUserAPIError(
-                "TELEGRAM_API_ID and TELEGRAM_API_HASH are not set in .env. Obtain them from https://my.telegram.org."
-            )
+        self._validate_ready()
+        return await self._send_async(to_phone, text, media_path)
 
-        if not self.is_session_authorized():
-            raise TelegramUserAPIError(
-                "Personal Telegram session not found. Please run 'python scripts/login_telegram_user.py' once to log in."
-            )
+    def send_message(
+        self,
+        to_phone: str,
+        text: str,
+        media_path: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Synchronously sends a message to a recipient phone number from your personal Telegram account.
+        Safe to call from both synchronous code and active event loop threads.
+        """
+        if self.dry_run:
+            # Short-circuit dry-run without loop management
+            masked = mask_phone_number(str(to_phone))
+            print("=" * 60)
+            print(" [DRY RUN ACTIVE] Telegram User Account (Personal Phone) simulation")
+            print("=" * 60)
+            print(f" Sender Phone:    {settings.TELEGRAM_PHONE or 'Your Telegram Phone'}")
+            print(f" Recipient Phone: {masked}")
+            print(f" Message Text:    {text}")
+            if media_path:
+                print(f" Media File:      {media_path}")
+            print(" Result:          Simulated success (no real Telegram call was made)")
+            print("=" * 60)
+            return {
+                "dry_run": True,
+                "provider": "telegram_user",
+                "recipient": str(to_phone),
+                "message_id": "simulated_tg_user_msg_id",
+                "ok": True,
+            }
 
-        # Execute async call synchronously for the campaign dispatch loop
+        # 2. REAL SEND MODE
+        self._validate_ready()
+
         try:
-            return asyncio.run(self._send_async(to_phone, text, media_path))
+            loop = asyncio.get_running_loop()
         except RuntimeError:
-            # Handle cases where an event loop is already running
-            loop = asyncio.get_event_loop()
-            return loop.run_until_complete(self._send_async(to_phone, text, media_path))
+            loop = None
+
+        if loop and loop.is_running():
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                return pool.submit(asyncio.run, self._send_async(to_phone, text, media_path)).result()
+        else:
+            return asyncio.run(self._send_async(to_phone, text, media_path))
