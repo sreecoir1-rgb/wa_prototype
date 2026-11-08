@@ -449,21 +449,50 @@ async def admin_campaign_send(
     db.commit()
     db.refresh(campaign)
 
+    # Build complete broadcast text including rate offer if provided
+    combined_message = custom_message.strip() if custom_message else ""
+    if rate_offer and rate_offer.strip():
+        combined_message = f"{combined_message}\n\n📌 Offer: {rate_offer.strip()}" if combined_message else f"📌 Offer: {rate_offer.strip()}"
+
     # Boolean dry_run: if checkbox is checked, form sends "true", otherwise False
     is_dry_run = dry_run == "true"
+    valid_channel_target = channel_target if channel_target in ("telegram", "whatsapp", "telegram_user") else None
 
     try:
         summary = campaign_sender.send_campaign(
             campaign_id=campaign.id,
             db=db,
             dry_run=is_dry_run,
-            custom_message=custom_message.strip() if custom_message else None,
-            channel_filter=channel_target if channel_target in ("telegram", "whatsapp") else None,
+            custom_message=combined_message if combined_message else None,
+            channel_filter=valid_channel_target,
         )
         mode_text = "DRY RUN (Simulated)" if summary.dry_run else "LIVE SEND"
+
+        if summary.total_targeted == 0:
+            return RedirectResponse(
+                url="/admin/campaigns?error=No+opted-in+contacts+found+matching+your+audience+filter+and+channel.",
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
+
+        if summary.sent_success == 0 and summary.failed > 0:
+            first_fail = db.scalar(
+                select(MessageLog.error)
+                .where(MessageLog.campaign_id == campaign.id, MessageLog.status == "failed")
+                .order_by(MessageLog.id.desc())
+            )
+            err_msg = f"Broadcast failed for {summary.failed} recipients: {first_fail or 'Check logs'}"
+            import urllib.parse
+            return RedirectResponse(
+                url=f"/admin/campaigns?error={urllib.parse.quote_plus(err_msg)}",
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
+
         msg = f"Campaign '{summary.campaign_name}' executed in {mode_text} mode! Targeted: {summary.total_targeted}, Sent: {summary.sent_success}."
+        if summary.failed > 0:
+            msg += f" ({summary.failed} failed)"
+        import urllib.parse
         return RedirectResponse(
-            url=f"/admin/campaigns?message={msg}",
+            url=f"/admin/campaigns?message={urllib.parse.quote_plus(msg)}",
             status_code=status.HTTP_303_SEE_OTHER,
         )
     except Exception as exc:

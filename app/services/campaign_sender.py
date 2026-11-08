@@ -42,7 +42,7 @@ class CampaignSender:
 
         if channel_filter == "telegram":
             query = query.where(Contact.phone.like("tg_%"))
-        elif channel_filter == "whatsapp":
+        elif channel_filter in ("whatsapp", "telegram_user"):
             query = query.where(~Contact.phone.like("tg_%"))
 
         query = query.order_by(Contact.id.asc())
@@ -90,8 +90,8 @@ class CampaignSender:
 
             for attempt in range(max_retries + 1):
                 try:
-                    if channel_filter == "telegram_user" or settings.BROADCAST_PROVIDER == "telegram_user":
-                        # Send from personal Telegram account directly to recipient's phone number
+                    if channel_filter == "telegram_user":
+                        # Explicitly targeted to personal Telegram user account (mobile numbers)
                         user_res = user_tg_client.send_message(
                             to_phone=contact.phone,
                             text=msg_text,
@@ -110,16 +110,37 @@ class CampaignSender:
                             tg_res = tg_client.send_message(chat_id=raw_chat_id, text=msg_text)
                         wamid = f"tg_{tg_res.get('message_id', 'simulated')}"
                     else:
-                        # Send via WhatsApp Cloud API
-                        tmpl_name = campaign.template.name if campaign.template else "hello_world"
-                        tmpl_lang = campaign.template.language if campaign.template else "en_US"
-                        result = wa_client.send_template(
-                            to_phone=contact.phone,
-                            template_name=tmpl_name,
-                            language_code=tmpl_lang,
-                        )
-                        messages = result.get("messages", [])
-                        wamid = messages[0].get("id") if messages else ("simulated_wamid" if is_dry_run else None)
+                        # Non-tg contact (E.164 mobile phone number)
+                        if channel_filter == "whatsapp":
+                            # Explicit WhatsApp channel requested
+                            tmpl_name = campaign.template.name if campaign.template else "hello_world"
+                            tmpl_lang = campaign.template.language if campaign.template else "en_US"
+                            result = wa_client.send_template(
+                                to_phone=contact.phone,
+                                template_name=tmpl_name,
+                                language_code=tmpl_lang,
+                            )
+                            messages = result.get("messages", [])
+                            wamid = messages[0].get("id") if messages else ("simulated_wamid" if is_dry_run else None)
+                        elif settings.BROADCAST_PROVIDER == "telegram_user" or (user_tg_client.is_session_authorized() and not settings.WHATSAPP_TOKEN):
+                            # Smart fallback: Telegram user session is authorized and WhatsApp token is empty
+                            user_res = user_tg_client.send_message(
+                                to_phone=contact.phone,
+                                text=msg_text,
+                                media_path=campaign.media_url,
+                            )
+                            wamid = f"tg_user_{user_res.get('message_id', 'simulated')}"
+                        else:
+                            # Send via WhatsApp Cloud API
+                            tmpl_name = campaign.template.name if campaign.template else "hello_world"
+                            tmpl_lang = campaign.template.language if campaign.template else "en_US"
+                            result = wa_client.send_template(
+                                to_phone=contact.phone,
+                                template_name=tmpl_name,
+                                language_code=tmpl_lang,
+                            )
+                            messages = result.get("messages", [])
+                            wamid = messages[0].get("id") if messages else ("simulated_wamid" if is_dry_run else None)
                     success = True
                     break
                 except Exception as exc:

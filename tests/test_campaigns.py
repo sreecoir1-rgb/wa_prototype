@@ -150,3 +150,51 @@ def test_campaign_api_endpoints(client_and_db) -> None:
     get_res = client.get(f"/api/campaigns/{campaign_id}")
     assert get_res.status_code == 200
     assert get_res.json()["status"] == "completed"
+
+
+def test_campaign_send_telegram_user_channel(client_and_db) -> None:
+    """
+    Verifies that broadcasts targeted to 'telegram_user' route to mobile contacts
+    via Telegram User Client (dry_run) and create logs starting with 'tg_user_'.
+    """
+    _, TestingSession = client_and_db
+    session = TestingSession()
+
+    # 1. Seed opted-in mobile contacts
+    c1 = Contact(name="Mobile Buyer 1", phone="+919876540001", consent_status="opted_in")
+    c2 = Contact(name="Mobile Buyer 2", phone="+919876540002", consent_status="opted_in")
+    # Bot contact should be excluded from telegram_user mobile filter
+    c3 = Contact(name="Bot Subscriber", phone="tg_12345678", consent_status="opted_in")
+    session.add_all([c1, c2, c3])
+    session.commit()
+
+    # 2. Create campaign
+    tmpl = Template(name="custom_broadcast", language="en_US", body_preview="Coir Pith 5kg Block Offer")
+    session.add(tmpl)
+    session.commit()
+
+    campaign = Campaign(name="Coir Pith Telegram Broadcast", template_id=tmpl.id, status="draft")
+    session.add(campaign)
+    session.commit()
+
+    # 3. Execute campaign with channel_filter="telegram_user"
+    sender = CampaignSender()
+    summary = sender.send_campaign(
+        campaign_id=campaign.id,
+        db=session,
+        dry_run=True,
+        channel_filter="telegram_user",
+        custom_message="Fresh Coir Pith 5kg Blocks ready at ₹185/unit",
+    )
+
+    # 4. Verify targeted mobile count (c1 and c2, c3 excluded)
+    assert summary.total_targeted == 2
+    assert summary.sent_success == 2
+    assert summary.failed == 0
+
+    # 5. Verify message logs use tg_user_ identifier
+    logs = list(session.scalars(select(MessageLog).where(MessageLog.campaign_id == campaign.id)).all())
+    assert len(logs) == 2
+    for log in logs:
+        assert log.status == "simulated"
+        assert log.whatsapp_message_id.startswith("tg_user_")
