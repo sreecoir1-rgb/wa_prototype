@@ -12,6 +12,9 @@ ENV/
 # Secrets and local configurations
 .env
 .env.local
+*.session
+*.session-journal
+uploads/
 
 # SQLite Databases
 *.db

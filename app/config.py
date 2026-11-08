@@ -16,7 +16,13 @@ class Settings(BaseSettings):
 
     # Telegram Bot API Credentials & Multi-Channel Provider
     TELEGRAM_BOT_TOKEN: str = ""
-    BROADCAST_PROVIDER: str = "telegram"  # "telegram", "whatsapp", or "both"
+    BROADCAST_PROVIDER: str = "telegram"  # "telegram", "whatsapp", "telegram_user", or "both"
+
+    # Telegram User Account (MTProto / Personal Phone) Credentials
+    TELEGRAM_API_ID: int = 0
+    TELEGRAM_API_HASH: str = ""
+    TELEGRAM_PHONE: str = ""
+    TELEGRAM_SESSION_NAME: str = "telegram_user"
 
     # Webhook Verification & Security
     WEBHOOK_VERIFY_TOKEN: str = ""

@@ -13,6 +13,7 @@ from app.models import Contact, Campaign, MessageLog
 from app.schemas import CampaignSendSummary
 from app.services.whatsapp_client import WhatsAppClient
 from app.services.telegram_client import TelegramClient
+from app.services.telegram_user_client import TelegramUserClient
 
 logger = logging.getLogger(__name__)
 
@@ -79,18 +80,27 @@ class CampaignSender:
 
         wa_client = WhatsAppClient(dry_run=is_dry_run)
         tg_client = TelegramClient(dry_run=is_dry_run)
+        user_tg_client = TelegramUserClient(dry_run=is_dry_run)
 
         for contact in contacts:
             success = False
             wamid = None
             last_error = None
-            is_telegram = contact.phone.startswith("tg_")
+            msg_text = custom_message or (campaign.template.body_preview if campaign.template else None) or f"📢 <b>{campaign.name}</b>"
 
             for attempt in range(max_retries + 1):
                 try:
-                    if is_telegram:
+                    if channel_filter == "telegram_user" or settings.BROADCAST_PROVIDER == "telegram_user":
+                        # Send from personal Telegram account directly to recipient's phone number
+                        user_res = user_tg_client.send_message(
+                            to_phone=contact.phone,
+                            text=msg_text,
+                            media_path=campaign.media_url,
+                        )
+                        wamid = f"tg_user_{user_res.get('message_id', 'simulated')}"
+                    elif contact.phone.startswith("tg_"):
+                        # Send via Telegram Bot API
                         raw_chat_id = contact.phone.replace("tg_", "")
-                        msg_text = custom_message or (campaign.template.body_preview if campaign.template else None) or f"📢 <b>{campaign.name}</b>"
                         if campaign.media_url:
                             if campaign.media_type == "video":
                                 tg_res = tg_client.send_video(chat_id=raw_chat_id, video=campaign.media_url, caption=msg_text)
@@ -100,6 +110,7 @@ class CampaignSender:
                             tg_res = tg_client.send_message(chat_id=raw_chat_id, text=msg_text)
                         wamid = f"tg_{tg_res.get('message_id', 'simulated')}"
                     else:
+                        # Send via WhatsApp Cloud API
                         tmpl_name = campaign.template.name if campaign.template else "hello_world"
                         tmpl_lang = campaign.template.language if campaign.template else "en_US"
                         result = wa_client.send_template(

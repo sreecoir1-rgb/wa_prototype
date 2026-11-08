@@ -32,7 +32,8 @@
           Target Channel
           <select id="channel_target" name="channel_target" style="border-radius: 8px;" onchange="updateChannelBadge();">
             <option value="all">🌐 All Channels (Telegram + WhatsApp)</option>
-            <option value="telegram">✈ Telegram Channel Only</option>
+            <option value="telegram_user">👤 My Telegram Account (Direct to Phone)</option>
+            <option value="telegram">✈ Telegram Bot Channel</option>
             <option value="whatsapp">📱 WhatsApp Channel Only</option>
           </select>
         </label>
@@ -281,8 +282,12 @@
     const badge = document.getElementById('previewChannelBadge');
     const bubble = document.getElementById('previewBubble');
 
-    if (val === 'telegram') {
-      badge.textContent = '✈ Telegram Mode';
+    if (val === 'telegram_user') {
+      badge.textContent = '👤 My Telegram Account';
+      badge.className = 'badge badge-telegram';
+      bubble.style.borderLeft = '3px solid #6366f1';
+    } else if (val === 'telegram') {
+      badge.textContent = '✈ Telegram Bot Mode';
       badge.className = 'badge badge-telegram';
       bubble.style.borderLeft = '3px solid #0284c7';
     } else if (val === 'whatsapp') {
