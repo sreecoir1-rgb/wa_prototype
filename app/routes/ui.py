@@ -150,8 +150,35 @@ def admin_create_single_contact(
     existing = db.scalar(select(Contact).where(Contact.phone == normalized_phone))
     if existing:
         masked = mask_phone_number(normalized_phone)
+        was_opted_out = existing.consent_status == "opted_out"
+
+        # Update consent status and refresh consent timestamp on re-optin
+        existing.consent_status = consent_status
+        if consent_status == "opted_in":
+            existing.consent_date = datetime.now()
+            if was_opted_out:
+                existing.consent_source = consent_source if (consent_source and consent_source != "admin_dashboard") else "admin_dashboard_reoptin"
+            elif consent_source:
+                existing.consent_source = consent_source
+
+        if name and name.strip():
+            existing.name = name.strip()
+
+        if tags and tags.strip():
+            new_tags = [t.strip() for t in tags.split(",") if t.strip()]
+            current_tags = [t.strip() for t in (existing.tags or "").split(",") if t.strip()]
+            merged = list(dict.fromkeys(current_tags + new_tags))
+            existing.tags = ", ".join(merged)
+
+        db.commit()
+
+        if was_opted_out and consent_status == "opted_in":
+            return RedirectResponse(
+                url=f"/admin/contacts?message=Welcome+back!+Contact+{masked}+has+been+re-opted+in+successfully.",
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
         return RedirectResponse(
-            url=f"/admin/contacts?error=Contact+with+phone+{masked}+already+exists.",
+            url=f"/admin/contacts?message=Contact+{masked}+updated+successfully.",
             status_code=status.HTTP_303_SEE_OTHER,
         )
 

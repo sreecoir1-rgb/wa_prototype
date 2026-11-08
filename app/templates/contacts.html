@@ -1,19 +1,19 @@
 {% extends "base.html" %}
 
-{% block title %}Audience & Contacts - OmniBroadcast Pro{% endblock %}
+{% block title %}Coir Buyers & Subscribers - Sree Coir Broadcaster{% endblock %}
 
 {% block content %}
 <!-- Top Header & Actions -->
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
   <div>
-    <h2 style="font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem;">Audience & Subscribers</h2>
-    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Multi-channel customer registry with consent tracking & direct messaging.</p>
+    <h2 style="font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem; color: var(--coir-husk);">Coir Buyers & Subscribers</h2>
+    <p style="color: var(--text-muted); font-size: 0.92rem; margin: 0;">Multi-channel customer registry with consent tracking, instant re-optin, and direct mobile dispatch.</p>
   </div>
   <div style="display: flex; gap: 0.75rem;">
-    <button type="button" onclick="openAddContactModal();" class="btn-primary" style="margin: 0; padding: 0.6rem 1.25rem; font-size: 0.9rem;">
+    <button type="button" onclick="openAddContactModal();" class="btn-primary" style="margin: 0; font-size: 0.9rem;">
       ➕ Add Single Contact
     </button>
-    <a href="/admin/contacts/import" class="btn-secondary" role="button" style="text-decoration: none; padding: 0.6rem 1.15rem; font-size: 0.9rem;">
+    <a href="/admin/contacts/import" class="btn-secondary" role="button" style="text-decoration: none; font-size: 0.9rem;">
       📥 Import CSV
     </a>
   </div>
@@ -22,49 +22,49 @@
 <!-- Audience Statistics Grid -->
 <div class="stats-grid">
   <div class="stat-card">
-    <span class="stat-label">Total Audience</span>
+    <span class="stat-label">Total Buyers</span>
     <span class="stat-value">{{ stats.total if stats else contacts|length }}</span>
-    <span class="stat-meta">Registered subscribers</span>
+    <span class="stat-meta">Registered coir industry contacts</span>
   </div>
   <div class="stat-card">
-    <span class="stat-label">Opted-In (Broadcast Eligible)</span>
-    <span class="stat-value" style="color: #166534;">{{ stats.opted_in if stats else '—' }}</span>
-    <span class="stat-meta">Passed consent safeguards</span>
+    <span class="stat-label">Opted-In (Active Broadcast)</span>
+    <span class="stat-value" style="color: var(--coir-palm);">{{ stats.opted_in if stats else '—' }}</span>
+    <span class="stat-meta">Passed consent & ready for rates</span>
   </div>
   <div class="stat-card">
     <span class="stat-label">Telegram Channel</span>
     <span class="stat-value" style="color: #0284c7;">{{ stats.telegram if stats else '—' }}</span>
-    <span class="stat-meta">Subscribed via Bot / Phone</span>
+    <span class="stat-meta">Direct mobile & bot subscribers</span>
   </div>
   <div class="stat-card">
     <span class="stat-label">WhatsApp Channel</span>
-    <span class="stat-value" style="color: #15803d;">{{ stats.whatsapp if stats else '—' }}</span>
-    <span class="stat-meta">Direct Cloud API mobile</span>
+    <span class="stat-value" style="color: var(--coir-gold);">{{ stats.whatsapp if stats else '—' }}</span>
+    <span class="stat-meta">Direct Cloud API verified mobile</span>
   </div>
 </div>
 
 <!-- Filter Bar -->
-<article class="pro-card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+<article class="pro-card" style="padding: 1.35rem; margin-bottom: 1.5rem;">
   <form method="get" action="/admin/contacts" style="display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 1rem; align-items: flex-end; margin: 0;">
     <div>
-      <label for="status" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">CONSENT STATUS</label>
-      <select id="status" name="status" style="border-radius: 8px; margin: 0;">
+      <label for="status" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem; display: block;">CONSENT STATUS</label>
+      <select id="status" name="status" style="border-radius: 10px; margin: 0; border-color: var(--border-color);">
         <option value="">All Consent Statuses</option>
-        <option value="opted_in" {% if current_status == 'opted_in' %}selected{% endif %}>Opted In (Eligible)</option>
+        <option value="opted_in" {% if current_status == 'opted_in' %}selected{% endif %}>Opted In (Eligible for Rates)</option>
         <option value="opted_out" {% if current_status == 'opted_out' %}selected{% endif %}>Opted Out (Excluded)</option>
         <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending Consent</option>
       </select>
     </div>
     <div>
-      <label for="tag" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">AUDIENCE TAG</label>
-      <input type="text" id="tag" name="tag" placeholder="e.g. channel:telegram, vip, rates" value="{{ current_tag or '' }}" style="border-radius: 8px; margin: 0;">
+      <label for="tag" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem; display: block;">AUDIENCE TAG</label>
+      <input type="text" id="tag" name="tag" placeholder="e.g. coir-pith, curled-rope, wholesale" value="{{ current_tag or '' }}" style="border-radius: 10px; margin: 0; border-color: var(--border-color);">
     </div>
     <div>
-      <button type="submit" class="btn-primary" style="margin: 0; padding: 0.6rem 1.25rem;">Filter</button>
+      <button type="submit" class="btn-primary" style="margin: 0; padding: 0.65rem 1.35rem;">Filter</button>
     </div>
     {% if current_status or current_tag %}
     <div>
-      <a href="/admin/contacts" class="btn-secondary" role="button" style="text-decoration: none; display: inline-block; padding: 0.6rem 1rem; margin: 0;">Reset</a>
+      <a href="/admin/contacts" class="btn-secondary" role="button" style="text-decoration: none; display: inline-block; padding: 0.65rem 1.15rem; margin: 0;">Reset</a>
     </div>
     {% endif %}
   </form>
@@ -73,74 +73,74 @@
 <!-- Contacts Table Card -->
 <article class="pro-card" style="padding: 0; overflow: hidden;">
   <div class="overflow-auto">
-    <table style="margin-bottom: 0;">
-      <thead style="background: #f8fafc; border-bottom: 1px solid var(--border-color);">
+    <table style="margin-bottom: 0; width: 100%; border-collapse: collapse;">
+      <thead style="background: #faf7f2; border-bottom: 1px solid var(--border-color);">
         <tr>
-          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Channel</th>
-          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Subscriber</th>
-          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Phone Number</th>
-          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Consent</th>
-          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Tags</th>
-          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Registered</th>
-          <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); text-align: right;">Action</th>
+          <th style="padding: 0.95rem 1.15rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Channel</th>
+          <th style="padding: 0.95rem 1.15rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Buyer / Contact</th>
+          <th style="padding: 0.95rem 1.15rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Phone Number</th>
+          <th style="padding: 0.95rem 1.15rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Consent Status</th>
+          <th style="padding: 0.95rem 1.15rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Tags</th>
+          <th style="padding: 0.95rem 1.15rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Consent Date</th>
+          <th style="padding: 0.95rem 1.15rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); text-align: right; letter-spacing: 0.05em;">Action</th>
         </tr>
       </thead>
       <tbody>
         {% for contact in contacts %}
-        <tr style="border-bottom: 1px solid #f1f5f9;">
-          <td style="padding: 0.85rem 1rem;">
+        <tr style="border-bottom: 1px solid var(--border-subtle);">
+          <td style="padding: 0.95rem 1.15rem;">
             {% if contact.phone.startswith('tg_') or 'telegram' in (contact.tags or '') %}
               <span class="badge badge-telegram">✈ Telegram</span>
             {% else %}
-              <span class="badge badge-whatsapp">📱 WhatsApp / TG</span>
+              <span class="badge badge-coir">🥥 Mobile / WA</span>
             {% endif %}
           </td>
-          <td style="padding: 0.85rem 1rem; font-weight: 600;">
-            {{ contact.name or 'Subscriber #' ~ contact.id }}
+          <td style="padding: 0.95rem 1.15rem; font-weight: 700; color: var(--coir-husk);">
+            {{ contact.name or 'Buyer #' ~ contact.id }}
           </td>
-          <td style="padding: 0.85rem 1rem;">
-            <code style="background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.82rem; color: #334155; font-weight: 700;">{{ contact.phone }}</code>
+          <td style="padding: 0.95rem 1.15rem;">
+            <code style="background: var(--coir-gold-subtle); padding: 0.25rem 0.55rem; border-radius: 6px; font-size: 0.82rem; color: var(--coir-gold); font-weight: 700; border: 1px solid var(--coir-gold-border);">{{ contact.phone }}</code>
           </td>
-          <td style="padding: 0.85rem 1rem;">
+          <td style="padding: 0.95rem 1.15rem;">
             <span class="badge badge-{{ contact.consent_status }}">
               ● {{ contact.consent_status }}
             </span>
           </td>
-          <td style="padding: 0.85rem 1rem;">
+          <td style="padding: 0.95rem 1.15rem;">
             {% if contact.tags %}
               {% for tag_item in contact.tags.split(',') %}
-                <span style="background: #f1f5f9; color: #475569; font-size: 0.72rem; padding: 0.15rem 0.45rem; border-radius: 4px; font-weight: 600; margin-right: 0.25rem;">{{ tag_item.strip() }}</span>
+                <span style="background: #f4eee6; color: var(--coir-husk); font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 6px; font-weight: 600; margin-right: 0.25rem; border: 1px solid var(--border-color);">{{ tag_item.strip() }}</span>
               {% endfor %}
             {% else %}
               <span style="color: var(--text-muted); font-size: 0.8rem;">—</span>
             {% endif %}
           </td>
-          <td style="padding: 0.85rem 1rem; font-size: 0.8rem; color: var(--text-muted);">
+          <td style="padding: 0.95rem 1.15rem; font-size: 0.82rem; color: var(--text-muted);">
             {% if contact.consent_date %}
               {{ contact.consent_date.strftime('%Y-%m-%d %H:%M') }}
             {% else %}
               —
             {% endif %}
           </td>
-          <td style="padding: 0.85rem 1rem; text-align: right; white-space: nowrap;">
-            <button type="button" onclick="openDirectMessageModal('{{ contact.id }}', '{{ contact.name or contact.phone }}', '{{ contact.phone }}');" class="btn-secondary" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; margin: 0 0.35rem 0 0; color: #4338ca; font-weight: 700;">
+          <td style="padding: 0.95rem 1.15rem; text-align: right; white-space: nowrap;">
+            <button type="button" onclick="openDirectMessageModal('{{ contact.id }}', '{{ contact.name or contact.phone }}', '{{ contact.phone }}');" class="btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; margin: 0 0.35rem 0 0; color: var(--coir-gold); font-weight: 700; border-color: var(--coir-gold-border);">
               💬 Message
             </button>
             {% if contact.consent_status == 'opted_in' %}
-            <form method="post" action="/admin/contacts/{{ contact.id }}/opt-out" style="margin: 0; display: inline;" onsubmit="return confirm('Opt out this contact? They will be excluded from all future broadcasts.');">
-              <button type="submit" class="btn-secondary" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; margin: 0; color: #b91c1c;">Opt Out</button>
+            <form method="post" action="/admin/contacts/{{ contact.id }}/opt-out" style="margin: 0; display: inline;" onsubmit="return confirm('Opt out this coir buyer? They will be excluded from all rate broadcasts.');">
+              <button type="submit" class="btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; margin: 0; color: #b91c1c;">Opt Out</button>
             </form>
             {% else %}
-            <span style="color: var(--text-muted); font-size: 0.75rem;">Archived</span>
+            <span style="color: var(--text-muted); font-size: 0.75rem; padding: 0.35rem 0.5rem;">Archived</span>
             {% endif %}
           </td>
         </tr>
         {% else %}
         <tr>
-          <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem 1rem;">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">👥</div>
-            <strong>No contacts found matching your criteria.</strong>
-            <p style="font-size: 0.85rem; margin-top: 0.25rem;">Click <strong>+ Add Single Contact</strong> or import a CSV to populate your audience.</p>
+          <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3.5rem 1rem;">
+            <div style="font-size: 2.2rem; margin-bottom: 0.65rem;">🥥</div>
+            <strong style="color: var(--coir-husk); font-size: 1.05rem;">No coir buyers or subscribers found.</strong>
+            <p style="font-size: 0.88rem; margin-top: 0.35rem; color: var(--text-muted);">Click <strong>+ Add Single Contact</strong> or import your customer CSV to populate your audience.</p>
           </td>
         </tr>
         {% endfor %}
@@ -150,45 +150,52 @@
 </article>
 
 <!-- ======================================================== -->
-<!-- MODAL 1: ADD SINGLE CONTACT                              -->
+<!-- MODAL 1: ADD SINGLE CONTACT (WITH SEAMLESS RE-OPTIN)     -->
 <!-- ======================================================== -->
-<dialog id="addContactModal" style="border-radius: 14px; border: 1px solid var(--border-color); padding: 1.5rem; max-width: 480px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
-  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
-    <h4 style="margin: 0; font-weight: 800; font-size: 1.15rem;">➕ Add Single Contact</h4>
-    <button type="button" onclick="closeAddContactModal();" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted); padding: 0; line-height: 1;">&times;</button>
+<dialog id="addContactModal" style="max-width: 500px; width: 92%;">
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1.25rem;">
+    <div>
+      <h4 style="margin: 0; font-weight: 800; font-size: 1.2rem; color: var(--coir-husk);">➕ Add Coir Buyer / Contact</h4>
+      <span style="font-size: 0.78rem; color: var(--coir-gold); font-weight: 600;">Supports new contacts & automatic re-optin</span>
+    </div>
+    <button type="button" onclick="closeAddContactModal();" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); padding: 0; line-height: 1;">&times;</button>
   </div>
 
-  <form method="post" action="/admin/contacts/new">
-    <label for="contact_name" style="font-weight: 700; font-size: 0.85rem;">
-      Customer Name (Optional)
-      <input type="text" id="contact_name" name="name" placeholder="e.g. Rahul Sharma" style="border-radius: 8px;">
+  <form method="post" action="/admin/contacts/new" style="margin: 0;">
+    <div style="background: var(--coir-gold-subtle); border: 1px solid var(--coir-gold-border); border-radius: 10px; padding: 0.75rem 0.95rem; margin-bottom: 1.25rem; font-size: 0.8rem; color: var(--coir-gold-hover);">
+      ℹ️ <strong>Re-Optin Made Easy:</strong> If this phone number was previously opted-out, saving it with <em>Opted In</em> will seamlessly reactivate their subscription and update their tags without duplicate errors.
+    </div>
+
+    <label for="contact_name" style="font-weight: 700; font-size: 0.85rem; color: var(--coir-husk); margin-bottom: 0.35rem; display: block;">
+      Buyer / Company Name (Optional)
+      <input type="text" id="contact_name" name="name" placeholder="e.g. GreenEarth Coir Imports or Rajesh Kumar" style="border-radius: 10px; margin-top: 0.25rem; border-color: var(--border-color);">
     </label>
 
-    <label for="contact_phone" style="font-weight: 700; font-size: 0.85rem; margin-top: 0.75rem;">
-      Customer Phone Number (Required)
-      <input type="text" id="contact_phone" name="phone" placeholder="e.g. +919876543210 or 9876543210" required style="border-radius: 8px;">
-      <small style="display: block; color: var(--text-muted); font-size: 0.75rem; margin-top: -0.25rem; margin-bottom: 0.5rem;">
-        Used universally for WhatsApp, Telegram User account, and Bot. Auto-formatted to E.164.
+    <label for="contact_phone" style="font-weight: 700; font-size: 0.85rem; color: var(--coir-husk); margin-top: 0.85rem; margin-bottom: 0.35rem; display: block;">
+      Phone Number (Required)
+      <input type="text" id="contact_phone" name="phone" placeholder="e.g. +919876543210 or 9876543210" required style="border-radius: 10px; margin-top: 0.25rem; border-color: var(--border-color);">
+      <small style="display: block; color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">
+        Universal mobile number used for WhatsApp and Telegram. Auto-formatted to E.164.
       </small>
     </label>
 
-    <label for="contact_status" style="font-weight: 700; font-size: 0.85rem; margin-top: 0.5rem;">
-      Initial Consent Status
-      <select id="contact_status" name="consent_status" style="border-radius: 8px;">
-        <option value="opted_in" selected>Opted In (Eligible for Broadcasts immediately)</option>
-        <option value="pending">Pending Consent (Must confirm before receiving)</option>
+    <label for="contact_status" style="font-weight: 700; font-size: 0.85rem; color: var(--coir-husk); margin-top: 0.85rem; margin-bottom: 0.35rem; display: block;">
+      Consent Status
+      <select id="contact_status" name="consent_status" style="border-radius: 10px; margin-top: 0.25rem; border-color: var(--border-color);">
+        <option value="opted_in" selected>Opted In (Eligible for Coir Rate Broadcasts)</option>
+        <option value="pending">Pending Consent (Awaiting Confirmation)</option>
         <option value="opted_out">Opted Out</option>
       </select>
     </label>
 
-    <label for="contact_tags" style="font-weight: 700; font-size: 0.85rem; margin-top: 0.75rem;">
-      Audience Tags (Comma separated)
-      <input type="text" id="contact_tags" name="tags" placeholder="e.g. vip, rates, daily" style="border-radius: 8px;">
+    <label for="contact_tags" style="font-weight: 700; font-size: 0.85rem; color: var(--coir-husk); margin-top: 0.85rem; margin-bottom: 0.35rem; display: block;">
+      Product & Audience Tags (Comma separated)
+      <input type="text" id="contact_tags" name="tags" placeholder="e.g. coir-pith, 5kg-blocks, curled-rope, wholesale" style="border-radius: 10px; margin-top: 0.25rem; border-color: var(--border-color);">
     </label>
 
-    <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
-      <button type="button" onclick="closeAddContactModal();" class="btn-secondary" style="margin: 0; padding: 0.6rem 1.25rem;">Cancel</button>
-      <button type="submit" class="btn-primary" style="margin: 0; padding: 0.6rem 1.5rem;">Save Contact</button>
+    <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
+      <button type="button" onclick="closeAddContactModal();" class="btn-secondary" style="margin: 0; padding: 0.65rem 1.35rem;">Cancel</button>
+      <button type="submit" class="btn-primary" style="margin: 0; padding: 0.65rem 1.5rem;">Save Buyer Contact</button>
     </div>
   </form>
 </dialog>
@@ -196,50 +203,50 @@
 <!-- ======================================================== -->
 <!-- MODAL 2: DIRECT MESSAGE SINGLE CONTACT                   -->
 <!-- ======================================================== -->
-<dialog id="directMessageModal" style="border-radius: 14px; border: 1px solid var(--border-color); padding: 1.5rem; max-width: 520px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
-  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
+<dialog id="directMessageModal" style="max-width: 530px; width: 92%;">
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1.25rem;">
     <div>
-      <h4 style="margin: 0; font-weight: 800; font-size: 1.15rem;">💬 Send Direct Message</h4>
-      <div id="dmRecipientName" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;"></div>
+      <h4 style="margin: 0; font-weight: 800; font-size: 1.2rem; color: var(--coir-husk);">💬 Send Direct Message</h4>
+      <div id="dmRecipientName" style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;"></div>
     </div>
-    <button type="button" onclick="closeDirectMessageModal();" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted); padding: 0; line-height: 1;">&times;</button>
+    <button type="button" onclick="closeDirectMessageModal();" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); padding: 0; line-height: 1;">&times;</button>
   </div>
 
-  <form id="dmForm" method="post" action="" enctype="multipart/form-data">
-    <label for="dm_channel" style="font-weight: 700; font-size: 0.85rem;">
-      Send Via Channel
-      <select id="dm_channel" name="channel" style="border-radius: 8px;">
-        <option value="telegram_user" selected>👤 My Telegram Account (Direct to Customer's Phone)</option>
+  <form id="dmForm" method="post" action="" enctype="multipart/form-data" style="margin: 0;">
+    <label for="dm_channel" style="font-weight: 700; font-size: 0.85rem; color: var(--coir-husk); margin-bottom: 0.35rem; display: block;">
+      Dispatch Channel
+      <select id="dm_channel" name="channel" style="border-radius: 10px; margin-top: 0.25rem; border-color: var(--border-color);">
+        <option value="telegram_user" selected>👤 My Telegram Account (Direct to Customer's Mobile)</option>
         <option value="whatsapp">📱 WhatsApp Cloud API (Standard Template)</option>
         <option value="telegram_bot">✈ Telegram Bot API</option>
       </select>
     </label>
 
-    <label for="dm_text" style="font-weight: 700; font-size: 0.85rem; margin-top: 0.75rem;">
-      Message Text
-      <textarea id="dm_text" name="message_text" rows="3" placeholder="Type your direct message, rate quotation, or announcement..." required style="border-radius: 8px; font-size: 0.9rem;"></textarea>
+    <label for="dm_text" style="font-weight: 700; font-size: 0.85rem; color: var(--coir-husk); margin-top: 0.85rem; margin-bottom: 0.35rem; display: block;">
+      Quotation / Message Text
+      <textarea id="dm_text" name="message_text" rows="3" placeholder="Dear buyer, our washed 5kg coir pith blocks (EC < 0.5 mS/cm) are ready for dispatch at ₹185/unit FOB Cochin..." required style="border-radius: 10px; margin-top: 0.25rem; font-size: 0.9rem; border-color: var(--border-color);"></textarea>
     </label>
 
-    <!-- Optional Media -->
-    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem;">
-      <label style="font-weight: 700; font-size: 0.8rem; color: var(--text-main); margin-bottom: 0.25rem; display: block;">
-        Attach Image or Video (Optional)
+    <!-- Optional Media Attachment -->
+    <div style="background: #faf7f2; border: 1px solid var(--border-color); border-radius: 10px; padding: 0.85rem 1rem; margin-top: 0.85rem;">
+      <label style="font-weight: 700; font-size: 0.82rem; color: var(--coir-husk); margin-bottom: 0.35rem; display: block;">
+        Attach Product Photo or Video (Optional)
       </label>
-      <input type="file" name="media_file" accept="image/*,video/*" style="font-size: 0.8rem; margin-bottom: 0.35rem;">
-      <input type="url" name="media_url" placeholder="or paste web image/video URL..." style="font-size: 0.8rem; border-radius: 6px; padding: 0.35rem 0.5rem; margin: 0;">
+      <input type="file" name="media_file" accept="image/*,video/*" style="font-size: 0.8rem; margin-bottom: 0.45rem;">
+      <input type="url" name="media_url" placeholder="or paste image/video URL (e.g. coir_pith_sample.jpg)..." style="font-size: 0.8rem; border-radius: 8px; padding: 0.4rem 0.65rem; margin: 0; border-color: var(--border-color);">
     </div>
 
     <!-- Dry run checkbox -->
-    <div style="margin-top: 0.85rem;">
-      <label style="font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; margin: 0;">
+    <div style="margin-top: 0.95rem;">
+      <label style="font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
         <input type="checkbox" id="dm_dry_run" name="dry_run" value="true">
         <span><strong>DRY RUN (Simulated)</strong> — Log without dispatching real network message</span>
       </label>
     </div>
 
-    <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
-      <button type="button" onclick="closeDirectMessageModal();" class="btn-secondary" style="margin: 0; padding: 0.6rem 1.25rem;">Cancel</button>
-      <button type="submit" class="btn-primary" style="margin: 0; padding: 0.6rem 1.5rem;">🚀 Send Now</button>
+    <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
+      <button type="button" onclick="closeDirectMessageModal();" class="btn-secondary" style="margin: 0; padding: 0.65rem 1.35rem;">Cancel</button>
+      <button type="submit" class="btn-primary" style="margin: 0; padding: 0.65rem 1.5rem;">🚀 Dispatch Message</button>
     </div>
   </form>
 </dialog>

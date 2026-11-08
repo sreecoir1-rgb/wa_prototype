@@ -1,112 +1,113 @@
 {% extends "base.html" %}
 
-{% block title %}Broadcast Studio - OmniBroadcast Pro{% endblock %}
+{% block title %}Coir Broadcast Studio - Sree Coir Broadcaster{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 1.5rem;">
-  <h2 style="font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem;">Broadcast Campaign Studio</h2>
-  <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
-    Compose, preview, and dispatch multi-channel broadcasts to opted-in audiences.
+<div style="margin-bottom: 1.75rem;">
+  <h2 style="font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem; color: var(--coir-husk);">Coir Broadcast Studio</h2>
+  <p style="color: var(--text-muted); font-size: 0.92rem; margin: 0;">
+    Compose, preview, and dispatch product rates, offer photos, and export announcements to opted-in coir buyers.
   </p>
 </div>
 
-<div class="grid" style="grid-template-columns: 1.2fr 1fr; gap: 1.5rem; align-items: start;">
+<div class="grid" style="grid-template-columns: 1.25fr 1fr; gap: 1.75rem; align-items: start;">
   <!-- Left column: Campaign Composer Form -->
   <div>
     <article class="pro-card">
-      <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
-        <h4 style="font-weight: 800; margin-bottom: 0.25rem;">Create New Broadcast</h4>
-        <span style="font-size: 0.8rem; color: var(--text-muted);">
-          Targeting <strong>{{ opted_in_count }}</strong> consented subscribers across active channels.
+      <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1.35rem;">
+        <h4 style="font-weight: 800; margin-bottom: 0.25rem; color: var(--coir-husk); font-size: 1.2rem;">Create New Broadcast</h4>
+        <span style="font-size: 0.82rem; color: var(--text-muted);">
+          Targeting <strong style="color: var(--coir-palm);">{{ opted_in_count }}</strong> consented coir buyers across active channels.
         </span>
       </div>
 
       <form method="post" action="/admin/campaigns/send" id="broadcastForm" enctype="multipart/form-data" onsubmit="return confirmBroadcast();">
-        <label for="name" style="font-weight: 700; font-size: 0.85rem; color: var(--text-main);">
+        <label for="name" style="font-weight: 700; font-size: 0.85rem; color: var(--coir-husk); margin-bottom: 0.35rem; display: block;">
           Campaign Name
-          <input type="text" id="name" name="name" placeholder="e.g. Diwali Gold Rate Special or Weekend VIP Offer" required style="border-radius: 8px;">
+          <input type="text" id="name" name="name" placeholder="e.g. Coir Pith 5kg Block Export Rates or Curled Rope Special" required style="border-radius: 10px; margin-top: 0.25rem; border-color: var(--border-color);">
         </label>
 
         <!-- Channel Targeting -->
-        <label for="channel_target" style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin-top: 0.75rem;">
-          Target Channel
-          <select id="channel_target" name="channel_target" style="border-radius: 8px;" onchange="updateChannelBadge();">
-            <option value="all">🌐 All Channels (Telegram + WhatsApp)</option>
-            <option value="telegram_user">👤 My Telegram Account (Direct to Phone)</option>
+        <label for="channel_target" style="font-weight: 700; font-size: 0.85rem; color: var(--coir-husk); margin-top: 0.95rem; margin-bottom: 0.35rem; display: block;">
+          Target Dispatch Channel
+          <select id="channel_target" name="channel_target" style="border-radius: 10px; margin-top: 0.25rem; border-color: var(--border-color);" onchange="updateChannelBadge();">
+            <option value="all">🌐 All Channels (Telegram Direct + WhatsApp)</option>
+            <option value="telegram_user" selected>👤 My Telegram Account (Direct to Customer's Mobile)</option>
             <option value="telegram">✈ Telegram Bot Channel</option>
-            <option value="whatsapp">📱 WhatsApp Channel Only</option>
+            <option value="whatsapp">📱 WhatsApp Cloud API Only</option>
           </select>
         </label>
 
         <!-- Template Selection -->
-        <label for="template_id" style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin-top: 0.75rem;">
+        <label for="template_id" style="font-weight: 700; font-size: 0.85rem; color: var(--coir-husk); margin-top: 0.95rem; margin-bottom: 0.35rem; display: block;">
           Message Template
-          <select id="template_id" name="template_id" required onchange="handleTemplateChange();" style="border-radius: 8px;">
+          <select id="template_id" name="template_id" required onchange="handleTemplateChange();" style="border-radius: 10px; margin-top: 0.25rem; border-color: var(--border-color);">
             {% for t in templates %}
             <option value="{{ t.id }}" data-preview="{{ t.body_preview or '' }}">
               📋 {{ t.name }} ({{ t.language }})
             </option>
             {% endfor %}
-            <option value="0" data-custom="true">✍️ Custom Message (Compose Free-form)</option>
+            <option value="0" data-custom="true" selected>✍️ Custom Coir Announcement (Compose Free-form)</option>
           </select>
         </label>
 
-        <!-- Custom Message Composer (Hidden by default, shown when Custom is selected) -->
-        <div id="customMessageContainer" style="display: none; margin-top: 0.75rem;">
-          <label for="custom_message" style="font-weight: 700; font-size: 0.85rem; color: var(--brand-primary);">
+        <!-- Custom Message Composer -->
+        <div id="customMessageContainer" style="display: block; margin-top: 0.95rem;">
+          <label for="custom_message" style="font-weight: 700; font-size: 0.85rem; color: var(--coir-gold); margin-bottom: 0.35rem; display: block;">
             Custom Message Body (Free-form)
-            <textarea id="custom_message" name="custom_message" rows="4" placeholder="Write your broadcast announcement, offer details, or alert here..." oninput="updatePreview();" style="border-radius: 8px; margin-top: 0.25rem; font-size: 0.9rem;"></textarea>
+            <textarea id="custom_message" name="custom_message" rows="4" placeholder="Dear Buyer, fresh stock of washed Low EC Coir Pith 5kg Blocks (EC < 0.5 mS/cm, Expansion 75L) available for immediate shipment from Cochin Port. Contact us for bulk container discounts..." oninput="updatePreview();" style="border-radius: 10px; margin-top: 0.25rem; font-size: 0.9rem; border-color: var(--border-color);"></textarea>
           </label>
-          <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: -0.25rem; margin-bottom: 0.5rem;">
-            Tip: Keep messages clear and concise. Telegram supports rich formatting.
+          <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.25rem;">
+            Tip: Keep rates and specifications clear. Telegram supports bold, italic, and rich captions.
           </small>
         </div>
 
         <!-- Media Attachment (Picture / Video) -->
-        <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 0.85rem 1rem; margin-top: 0.75rem;">
-          <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin-bottom: 0.35rem; display: block;">
-            📸 Media Attachment (Picture or Video)
+        <div style="background: #faf7f2; border: 1px solid var(--border-color); border-radius: 10px; padding: 0.95rem 1.15rem; margin-top: 0.95rem;">
+          <label style="font-weight: 700; font-size: 0.85rem; color: var(--coir-husk); margin-bottom: 0.35rem; display: block;">
+            📸 Product Media Attachment (Photo or Video)
           </label>
-          <input type="file" id="media_file" name="media_file" accept="image/*,video/*" onchange="handleMediaUpload(this);" style="border-radius: 6px; font-size: 0.8rem; margin-bottom: 0.5rem;">
+          <input type="file" id="media_file" name="media_file" accept="image/*,video/*" onchange="handleMediaUpload(this);" style="border-radius: 8px; font-size: 0.8rem; margin-bottom: 0.5rem;">
           
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.65rem;">
             <span style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap;">or Web URL:</span>
-            <input type="url" id="media_url" name="media_url" placeholder="https://example.com/poster.jpg" oninput="handleMediaUrl(this.value);" style="font-size: 0.8rem; border-radius: 6px; padding: 0.35rem 0.65rem; margin: 0; flex: 1;">
+            <input type="url" id="media_url" name="media_url" placeholder="https://example.com/coir_block_pallet.jpg" oninput="handleMediaUrl(this.value);" style="font-size: 0.8rem; border-radius: 8px; padding: 0.4rem 0.65rem; margin: 0; flex: 1; border-color: var(--border-color);">
           </div>
         </div>
 
         <!-- Optional Rate / Notes -->
-        <label for="rate_offer" style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin-top: 0.75rem;">
-          Offer Subtext / Rate Details (Optional)
-          <input type="text" id="rate_offer" name="rate_offer" placeholder="e.g. Rate: ₹7,850/g (Valid until 6 PM)" oninput="updatePreview();" style="border-radius: 8px;">
+        <label for="rate_offer" style="font-weight: 700; font-size: 0.85rem; color: var(--coir-husk); margin-top: 0.95rem; margin-bottom: 0.35rem; display: block;">
+          Offer Subtext / Price Quotation (Optional)
+          <input type="text" id="rate_offer" name="rate_offer" placeholder="e.g. Rate: ₹185/block (FOB Cochin, Valid till Friday)" oninput="updatePreview();" style="border-radius: 10px; margin-top: 0.25rem; border-color: var(--border-color);">
         </label>
 
         <!-- Audience Filter -->
-        <label for="audience_filter" style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin-top: 0.75rem;">
-          Audience Tag Segment
-          <select id="audience_filter" name="audience_filter" style="border-radius: 8px;">
-            <option value="">All Opted-In Subscribers</option>
-            <option value="rates">Tagged 'rates'</option>
+        <label for="audience_filter" style="font-weight: 700; font-size: 0.85rem; color: var(--coir-husk); margin-top: 0.95rem; margin-bottom: 0.35rem; display: block;">
+          Buyer Segment Filter
+          <select id="audience_filter" name="audience_filter" style="border-radius: 10px; margin-top: 0.25rem; border-color: var(--border-color);">
+            <option value="">All Opted-In Coir Buyers</option>
+            <option value="coir-pith">Tagged 'coir-pith'</option>
+            <option value="curled-rope">Tagged 'curled-rope'</option>
+            <option value="wholesale">Tagged 'wholesale'</option>
             <option value="vip">Tagged 'vip'</option>
-            <option value="referrals">Tagged 'referrals'</option>
           </select>
         </label>
 
         <!-- Dry Run Safety Toggle -->
-        <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 0.85rem 1rem; margin-top: 1rem;">
-          <label for="dry_run" style="margin: 0; cursor: pointer; display: flex; align-items: flex-start; gap: 0.5rem;">
+        <div style="background: var(--coir-gold-subtle); border: 1px solid var(--coir-gold-border); border-radius: 10px; padding: 0.95rem 1.15rem; margin-top: 1.25rem;">
+          <label for="dry_run" style="margin: 0; cursor: pointer; display: flex; align-items: flex-start; gap: 0.65rem;">
             <input type="checkbox" id="dry_run" name="dry_run" value="true" {% if dry_run_default %}checked{% endif %} style="margin-top: 0.25rem;">
             <div>
-              <strong style="font-size: 0.85rem; color: var(--text-main);">DRY RUN (Simulation Safeguard)</strong>
-              <small style="display: block; color: var(--text-muted); font-size: 0.75rem; line-height: 1.35;">
-                Simulates delivery and records logs without sending real messages over carrier networks. Uncheck to broadcast live.
+              <strong style="font-size: 0.88rem; color: var(--coir-gold-hover);">DRY RUN (Simulation Mode)</strong>
+              <small style="display: block; color: var(--coir-husk-muted); font-size: 0.78rem; line-height: 1.4; margin-top: 2px;">
+                Simulates dispatch and creates message logs without sending real messages or incurring API charges. Uncheck to broadcast live.
               </small>
             </div>
           </label>
         </div>
 
-        <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1.25rem; padding: 0.85rem; font-size: 1rem;">
-          🚀 Dispatch Broadcast
+        <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1.5rem; padding: 0.85rem; font-size: 1rem;">
+          🚀 Dispatch Coir Broadcast
         </button>
       </form>
     </article>
@@ -114,10 +115,10 @@
 
   <!-- Right column: Interactive Smartphone Live Preview -->
   <div>
-    <article class="pro-card" style="padding: 1.25rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <h4 style="font-weight: 800; margin: 0; font-size: 1rem;">Live Subscriber View</h4>
-        <span id="previewChannelBadge" class="badge badge-telegram">✈ Multi-Channel</span>
+    <article class="pro-card" style="padding: 1.35rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.15rem;">
+        <h4 style="font-weight: 800; margin: 0; font-size: 1.05rem; color: var(--coir-husk);">Live Buyer View</h4>
+        <span id="previewChannelBadge" class="badge badge-coir">🥥 Coir Broadcast</span>
       </div>
 
       <!-- Smartphone Mockup -->
@@ -125,26 +126,26 @@
         <div class="phone-notch"></div>
         
         <!-- Status Bar -->
-        <div style="background: #1e293b; color: #94a3b8; font-size: 0.65rem; padding: 2px 14px 6px; display: flex; justify-content: space-between; font-weight: 600;">
+        <div style="background: #2d2621; color: #a89f91; font-size: 0.65rem; padding: 2px 14px 6px; display: flex; justify-content: space-between; font-weight: 600;">
           <span>9:41 AM</span>
           <span>5G ●●● 100%</span>
         </div>
 
         <!-- App Header Bar inside Phone -->
-        <div style="background: #0f172a; color: white; padding: 8px 12px; display: flex; align-items: center; gap: 8px;">
-          <div style="width: 28px; height: 28px; border-radius: 50%; background: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800;">
-            ⚡
+        <div style="background: #1c1917; color: white; padding: 10px 14px; display: flex; align-items: center; gap: 10px;">
+          <div style="width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #c26510, #15803d); display: flex; align-items: center; justify-content: center; font-size: 0.95rem;">
+            🥥
           </div>
           <div>
-            <div style="font-weight: 700; font-size: 0.8rem; line-height: 1.1;">OmniBroadcast Alerts</div>
-            <div style="font-size: 0.65rem; color: #94a3b8;">verified business channel</div>
+            <div style="font-weight: 700; font-size: 0.82rem; line-height: 1.1; color: #ffffff;">Sree Coir Products</div>
+            <div style="font-size: 0.65rem; color: #d6cfc7;">official rate channel</div>
           </div>
         </div>
 
         <!-- Chat Screen Content -->
         <div class="phone-screen" id="phoneScreen">
           <div style="text-align: center; margin-bottom: 10px;">
-            <span style="background: rgba(0,0,0,0.06); color: #64748b; font-size: 0.65rem; padding: 2px 8px; border-radius: 999px; font-weight: 600;">
+            <span style="background: rgba(38,32,27,0.08); color: var(--text-muted); font-size: 0.65rem; padding: 2px 8px; border-radius: 999px; font-weight: 600;">
               TODAY
             </span>
           </div>
@@ -155,22 +156,22 @@
               <img id="imagePreview" src="" alt="Media Preview" style="width: 100%; max-height: 180px; object-fit: cover; display: none;">
               <video id="videoPreview" controls style="width: 100%; max-height: 180px; display: none;"></video>
             </div>
-            <div id="previewBody" style="white-space: pre-wrap;">Select a template or compose a message...</div>
-            <div id="previewOffer" style="margin-top: 6px; font-weight: 700; color: #4338ca; font-size: 0.82rem;"></div>
+            <div id="previewBody" style="white-space: pre-wrap;">Select a template or compose an announcement...</div>
+            <div id="previewOffer" style="margin-top: 6px; font-weight: 700; color: var(--coir-gold); font-size: 0.82rem;"></div>
             <div class="chat-time" id="previewTime">Just now ✓✓</div>
           </div>
         </div>
       </div>
 
       <!-- Compliance summary -->
-      <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-        <h6 style="font-weight: 700; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">
-          Compliance & Safety Engine
+      <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.15rem;">
+        <h6 style="font-weight: 700; font-size: 0.8rem; color: var(--coir-gold); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em;">
+          Consent & Anti-Spam Safeguards
         </h6>
-        <ul style="font-size: 0.8rem; color: var(--text-muted); padding-left: 1.2rem; margin: 0;">
-          <li>✓ <strong>Strict Consent Guard:</strong> Automatically skips opted-out contacts.</li>
+        <ul style="font-size: 0.82rem; color: var(--text-muted); padding-left: 1.25rem; margin: 0; line-height: 1.5;">
+          <li>✓ <strong>Strict Consent Guard:</strong> Automatically skips buyers who opted out.</li>
           <li>✓ <strong>Instant STOP:</strong> Replying "STOP" unsubscribes immediately via webhook.</li>
-          <li>✓ <strong>Paced Dispatch:</strong> Applies exponential backoff to ensure high delivery rate.</li>
+          <li>✓ <strong>Paced Dispatch:</strong> Safe delay pauses between messages to avoid flood bans.</li>
         </ul>
       </div>
     </article>
@@ -178,61 +179,61 @@
 </div>
 
 <!-- Past Broadcast Campaigns Table -->
-<div style="margin-top: 2rem;">
-  <h3 style="font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem;">Broadcast History</h3>
-  <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
-    Audit trail of all executed campaigns and recipient delivery metrics.
+<div style="margin-top: 2.25rem;">
+  <h3 style="font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem; color: var(--coir-husk);">Broadcast History</h3>
+  <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.15rem;">
+    Audit trail of all executed campaigns, recipient delivery counts, and timestamps.
   </p>
 
   <article class="pro-card" style="padding: 0; overflow: hidden;">
     <div class="overflow-auto">
-      <table style="margin-bottom: 0;">
-        <thead style="background: #f8fafc; border-bottom: 1px solid var(--border-color);">
+      <table style="margin-bottom: 0; width: 100%; border-collapse: collapse;">
+        <thead style="background: #faf7f2; border-bottom: 1px solid var(--border-color);">
           <tr>
-            <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">ID</th>
-            <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Campaign Name</th>
-            <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Template / Content</th>
-            <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Audience Filter</th>
-            <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Status</th>
-            <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Recipients Logged</th>
-            <th style="padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Timestamp</th>
+            <th style="padding: 0.95rem 1.15rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">ID</th>
+            <th style="padding: 0.95rem 1.15rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Campaign Name</th>
+            <th style="padding: 0.95rem 1.15rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Template / Content</th>
+            <th style="padding: 0.95rem 1.15rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Audience Filter</th>
+            <th style="padding: 0.95rem 1.15rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Status</th>
+            <th style="padding: 0.95rem 1.15rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Recipients Logged</th>
+            <th style="padding: 0.95rem 1.15rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Timestamp</th>
           </tr>
         </thead>
         <tbody>
           {% for c in campaigns %}
-          <tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 0.85rem 1rem; font-size: 0.8rem; color: var(--text-muted);">#{{ c.id }}</td>
-            <td style="padding: 0.85rem 1rem; font-weight: 700; color: var(--text-main);">{{ c.name }}</td>
-            <td style="padding: 0.85rem 1rem;">
-              <code style="background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.8rem; color: #475569;">
+          <tr style="border-bottom: 1px solid var(--border-subtle);">
+            <td style="padding: 0.95rem 1.15rem; font-size: 0.82rem; color: var(--text-muted);">#{{ c.id }}</td>
+            <td style="padding: 0.95rem 1.15rem; font-weight: 700; color: var(--coir-husk);">{{ c.name }}</td>
+            <td style="padding: 0.95rem 1.15rem;">
+              <code style="background: #f4eee6; padding: 0.25rem 0.55rem; border-radius: 6px; font-size: 0.8rem; color: var(--coir-husk); border: 1px solid var(--border-color);">
                 {{ c.template.name if c.template else 'custom' }}
               </code>
             </td>
-            <td style="padding: 0.85rem 1rem; font-size: 0.85rem;">
+            <td style="padding: 0.95rem 1.15rem; font-size: 0.85rem;">
               {% if c.audience_filter %}
-                <span style="background: #eef2ff; color: #4338ca; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+                <span style="background: var(--coir-gold-subtle); color: var(--coir-gold); padding: 0.2rem 0.55rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; border: 1px solid var(--coir-gold-border);">
                   Tag: {{ c.audience_filter }}
                 </span>
               {% else %}
                 <span style="color: var(--text-muted); font-size: 0.85rem;">All Opted-In</span>
               {% endif %}
             </td>
-            <td style="padding: 0.85rem 1rem;">
+            <td style="padding: 0.95rem 1.15rem;">
               <span class="badge badge-{{ c.status }}">
                 ● {{ c.status }}
               </span>
             </td>
-            <td style="padding: 0.85rem 1rem; font-weight: 600; font-size: 0.85rem;">
+            <td style="padding: 0.95rem 1.15rem; font-weight: 600; font-size: 0.85rem;">
               {{ c.messages|length }} messages
             </td>
-            <td style="padding: 0.85rem 1rem; font-size: 0.8rem; color: var(--text-muted);">
+            <td style="padding: 0.95rem 1.15rem; font-size: 0.82rem; color: var(--text-muted);">
               {{ c.created_at.strftime('%Y-%m-%d %H:%M') }}
             </td>
           </tr>
           {% else %}
           <tr>
-            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2.5rem 1rem;">
-              No broadcast campaigns executed yet. Compose your first announcement above!
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem 1rem;">
+              No broadcast campaigns dispatched yet. Compose your first coir product rate broadcast above!
             </td>
           </tr>
           {% endfor %}
@@ -285,19 +286,19 @@
     if (val === 'telegram_user') {
       badge.textContent = '👤 My Telegram Account';
       badge.className = 'badge badge-telegram';
-      bubble.style.borderLeft = '3px solid #6366f1';
+      bubble.style.borderLeft = '3px solid #0284c7';
     } else if (val === 'telegram') {
       badge.textContent = '✈ Telegram Bot Mode';
       badge.className = 'badge badge-telegram';
       bubble.style.borderLeft = '3px solid #0284c7';
     } else if (val === 'whatsapp') {
-      badge.textContent = '📱 WhatsApp Mode';
+      badge.textContent = '📱 WhatsApp Cloud API';
       badge.className = 'badge badge-whatsapp';
-      bubble.style.borderLeft = '3px solid #25D366';
+      bubble.style.borderLeft = '3px solid #15803d';
     } else {
       badge.textContent = '🌐 Multi-Channel';
-      badge.className = 'badge badge-completed';
-      bubble.style.borderLeft = 'none';
+      badge.className = 'badge badge-coir';
+      bubble.style.borderLeft = '3px solid #c26510';
     }
   }
 
@@ -305,7 +306,7 @@
     const isDryRun = document.getElementById('dry_run').checked;
     const channel = document.getElementById('channel_target').value.toUpperCase();
     const mode = isDryRun ? "DRY RUN (Simulated - No real network charges)" : "LIVE SEND (Real network dispatch to subscribers)";
-    return confirm("⚡ OMNIBROADCAST PRO - CONFIRM DISPATCH\n\nTarget Channel: " + channel + "\nMode: " + mode + "\n\nDo you want to proceed with this broadcast?");
+    return confirm("🥥 SREE COIR BROADCASTER - CONFIRM DISPATCH\n\nTarget Channel: " + channel + "\nMode: " + mode + "\n\nDo you want to proceed with this broadcast?");
   }
 
   function handleMediaUpload(input) {

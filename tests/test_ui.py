@@ -136,18 +136,13 @@ def test_admin_create_single_contact_success(client_and_db) -> None:
     assert contact.tags == "lead, referral"
 
 
-def test_admin_create_single_contact_invalid_and_duplicate(client_and_db) -> None:
-    """Verifies validation and duplicate handling on single contact addition."""
+def test_admin_create_single_contact_invalid_and_reoptin(client_and_db) -> None:
+    """Verifies phone validation and smooth re-optin logic for existing contacts."""
     client, TestingSession = client_and_db
     session = TestingSession()
 
     # Log in
     client.post("/login", data={"username": "admin", "password": "admin123"})
-
-    # Seed existing contact
-    existing = Contact(name="Existing User", phone="+919876543210", consent_status="opted_in")
-    session.add(existing)
-    session.commit()
 
     # 1. Reject invalid phone format
     invalid_res = client.post(
@@ -158,14 +153,27 @@ def test_admin_create_single_contact_invalid_and_duplicate(client_and_db) -> Non
     assert invalid_res.status_code == 303
     assert "error=" in invalid_res.headers["location"]
 
-    # 2. Reject duplicate phone
-    duplicate_res = client.post(
+    # 2. Seed an opted-out contact
+    opted_out_contact = Contact(name="Old Lead", phone="+919876543210", consent_status="opted_out", tags="old")
+    session.add(opted_out_contact)
+    session.commit()
+
+    # 3. Re-optin: admin enters the phone number normally with opted_in
+    reoptin_res = client.post(
         "/admin/contacts/new",
-        data={"name": "Duplicate", "phone": "+919876543210"},
+        data={"name": "Reactivated Lead", "phone": "+919876543210", "consent_status": "opted_in", "tags": "coir-pith"},
         follow_redirects=False,
     )
-    assert duplicate_res.status_code == 303
-    assert "already+exists" in duplicate_res.headers["location"]
+    assert reoptin_res.status_code == 303
+    assert "re-opted+in+successfully" in reoptin_res.headers["location"]
+
+    # Verify database state
+    session.expire_all()
+    updated = session.get(Contact, opted_out_contact.id)
+    assert updated.consent_status == "opted_in"
+    assert updated.name == "Reactivated Lead"
+    assert "coir-pith" in updated.tags
+    assert updated.consent_source == "admin_dashboard_reoptin"
 
 
 def test_admin_direct_message_contact_dry_run(client_and_db) -> None:

@@ -3,26 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}OmniBroadcast Pro{% endblock %} | Multi-Channel Broadcast Studio</title>
+  <title>{% block title %}Sree Coir Broadcaster{% endblock %} | Coir Products & Agri Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
   
   <style>
     :root {
       --font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      --brand-primary: #4f46e5;
-      --brand-primary-hover: #4338ca;
-      --wa-green: #25D366;
-      --wa-dark: #128C7E;
-      --tg-blue: #0284c7;
-      --surface-bg: #f8fafc;
+      --heading-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      
+      /* Coir Business Natural Palette */
+      --coir-gold: #c26510;
+      --coir-gold-hover: #a85208;
+      --coir-gold-subtle: #fef5ea;
+      --coir-gold-border: #fbd38d;
+      
+      --coir-palm: #15803d;
+      --coir-palm-hover: #166534;
+      --coir-palm-subtle: #f0fdf4;
+      --coir-palm-border: #bbf7d0;
+
+      --coir-husk: #26201b;
+      --coir-husk-muted: #6b635b;
+      
+      --surface-bg: #faf7f2;
       --card-bg: #ffffff;
-      --border-color: #e2e8f0;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
+      --border-color: #e7e0d6;
+      --border-subtle: #f2eee8;
+      --text-main: #26201b;
+      --text-muted: #6b635b;
+      
+      --wa-green: #15803d;
+      --tg-blue: #0284c7;
+      
       --pico-font-family: var(--font-family);
+      --pico-primary: var(--coir-gold);
+      --pico-primary-hover: var(--coir-gold-hover);
+      --pico-border-color: var(--border-color);
+      --pico-card-background-color: var(--card-bg);
+    }
+
+    * {
+      box-sizing: border-box;
     }
 
     body {
@@ -33,28 +57,32 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      margin: 0;
     }
 
     .container {
       max-width: 1240px;
       margin: 0 auto;
-      padding: 1.5rem 1rem;
+      padding: 1.75rem 1.25rem;
       flex: 1;
+      width: 100%;
     }
 
-    /* Enterprise Header */
+    /* Coir Enterprise Header */
     .top-header {
       background: #ffffff;
       border-bottom: 1px solid var(--border-color);
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 8px -2px rgba(38, 32, 27, 0.05);
       position: sticky;
       top: 0;
       z-index: 50;
+      backdrop-filter: blur(8px);
+      background: rgba(255, 255, 255, 0.95);
     }
     .header-inner {
       max-width: 1240px;
       margin: 0 auto;
-      padding: 0.75rem 1rem;
+      padding: 0.75rem 1.25rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -62,107 +90,140 @@
     .brand-group {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.85rem;
       text-decoration: none;
       color: inherit;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .brand-group:hover {
+      transform: translateY(-1px);
     }
     .brand-icon {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, #4f46e5, #06b6d4);
-      border-radius: 10px;
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #c26510 0%, #15803d 100%);
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
-      font-size: 1.2rem;
-      font-weight: 800;
-      box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+      font-size: 1.45rem;
+      box-shadow: 0 4px 10px rgba(194, 101, 16, 0.25);
     }
     .brand-text {
       display: flex;
       flex-direction: column;
     }
     .brand-name {
-      font-size: 1.15rem;
+      font-size: 1.2rem;
       font-weight: 800;
       letter-spacing: -0.02em;
-      color: #0f172a;
-      line-height: 1.2;
+      color: var(--coir-husk);
+      line-height: 1.15;
     }
     .brand-tagline {
       font-size: 0.7rem;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--brand-primary);
+      letter-spacing: 0.08em;
+      color: var(--coir-gold);
     }
 
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.6rem;
       list-style: none;
       margin: 0;
       padding: 0;
     }
     .nav-link {
-      padding: 0.45rem 0.85rem;
+      padding: 0.5rem 0.9rem;
       font-size: 0.875rem;
       font-weight: 600;
       color: var(--text-muted);
-      border-radius: 8px;
+      border-radius: 10px;
       text-decoration: none;
-      transition: all 0.15s ease;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .nav-link:hover {
-      color: var(--brand-primary);
-      background: #f1f5f9;
+      color: var(--coir-gold);
+      background: var(--coir-gold-subtle);
+      transform: translateY(-1px);
     }
     .nav-link.active {
-      color: var(--brand-primary);
-      background: #eef2ff;
+      color: var(--coir-gold);
+      background: var(--coir-gold-subtle);
+      border: 1px solid var(--coir-gold-border);
     }
 
     /* Cards & Containers */
     article.pro-card {
       background: #ffffff;
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 2px 6px -1px rgba(38, 32, 27, 0.04), 0 1px 3px rgba(38, 32, 27, 0.02);
       margin-bottom: 1.5rem;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    article.pro-card:hover {
+      border-color: #d8cebe;
+      box-shadow: 0 8px 24px -4px rgba(38, 32, 27, 0.08), 0 2px 6px -1px rgba(38, 32, 27, 0.03);
     }
     
     /* Stat Cards */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+      gap: 1.25rem;
+      margin-bottom: 1.75rem;
     }
     .stat-card {
       background: #ffffff;
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 1.25rem;
-      box-shadow: 0 1px 2px 0 rgba(0,0,0,0.04);
+      border-radius: 14px;
+      padding: 1.35rem;
+      box-shadow: 0 2px 6px -1px rgba(38, 32, 27, 0.04);
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: 0.35rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .stat-card::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--coir-gold), #e09f58);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px -3px rgba(38, 32, 27, 0.09);
+      border-color: #d8cebe;
+    }
+    .stat-card:hover::after {
+      opacity: 1;
     }
     .stat-label {
       font-size: 0.75rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
       color: var(--text-muted);
     }
     .stat-value {
-      font-size: 1.85rem;
+      font-size: 2rem;
       font-weight: 800;
       letter-spacing: -0.03em;
       color: var(--text-main);
+      line-height: 1.1;
     }
     .stat-meta {
       font-size: 0.75rem;
@@ -174,118 +235,188 @@
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      padding: 0.2rem 0.65rem;
+      padding: 0.25rem 0.75rem;
       border-radius: 9999px;
       font-size: 0.75rem;
       font-weight: 700;
       letter-spacing: 0.02em;
     }
-    .badge-opted_in { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-    .badge-opted_out { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-    .badge-pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-    .badge-completed { background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; }
-    .badge-simulated { background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
-    .badge-telegram { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; font-weight: 700; }
-    .badge-whatsapp { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; font-weight: 700; }
+    .badge-opted_in { background: #eaf8ee; color: #15803d; border: 1px solid #bcf0cc; }
+    .badge-opted_out { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .badge-pending { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .badge-completed { background: #eef8ff; color: #0369a1; border: 1px solid #bae6fd; }
+    .badge-simulated { background: #faf5ff; color: #7e22ce; border: 1px solid #e9d5ff; }
+    .badge-telegram { background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; font-weight: 700; }
+    .badge-whatsapp { background: #eaf8ee; color: #15803d; border: 1px solid #bcf0cc; font-weight: 700; }
+    .badge-coir { background: var(--coir-gold-subtle); color: var(--coir-gold); border: 1px solid var(--coir-gold-border); font-weight: 700; }
 
-    /* Alert banners */
+    /* Alert banners with smooth slide-in */
+    @keyframes alertSlideIn {
+      from { transform: translateY(-8px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
     .alert-success {
       background: #f0fdf4;
       border: 1px solid #bbf7d0;
       color: #166534;
-      padding: 0.85rem 1.25rem;
-      border-radius: 10px;
-      font-size: 0.9rem;
+      padding: 0.95rem 1.35rem;
+      border-radius: 12px;
+      font-size: 0.92rem;
       font-weight: 600;
-      margin-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.65rem;
+      box-shadow: 0 2px 6px rgba(22, 101, 52, 0.06);
+      animation: alertSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     .alert-error {
       background: #fef2f2;
       border: 1px solid #fecaca;
       color: #991b1b;
-      padding: 0.85rem 1.25rem;
-      border-radius: 10px;
-      font-size: 0.9rem;
+      padding: 0.95rem 1.35rem;
+      border-radius: 12px;
+      font-size: 0.92rem;
       font-weight: 600;
-      margin-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.65rem;
+      box-shadow: 0 2px 6px rgba(153, 27, 27, 0.06);
+      animation: alertSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    /* Buttons */
+    /* Buttons with smooth tactile elevation */
     .btn-primary {
-      background: var(--brand-primary);
-      border-color: var(--brand-primary);
+      background: var(--coir-gold);
+      border: 1px solid var(--coir-gold);
       color: #ffffff;
       font-weight: 700;
-      border-radius: 8px;
-      padding: 0.6rem 1.25rem;
-      transition: all 0.15s ease;
+      border-radius: 10px;
+      padding: 0.65rem 1.4rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      box-shadow: 0 2px 5px rgba(194, 101, 16, 0.2);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .btn-primary:hover {
-      background: var(--brand-primary-hover);
-      border-color: var(--brand-primary-hover);
+      background: var(--coir-gold-hover);
+      border-color: var(--coir-gold-hover);
+      transform: translateY(-1.5px);
+      box-shadow: 0 6px 16px rgba(194, 101, 16, 0.28);
+      color: #ffffff;
     }
+    .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(194, 101, 16, 0.2);
+    }
+
     .btn-secondary {
-      background: #f1f5f9;
-      border-color: var(--border-color);
+      background: #ffffff;
+      border: 1px solid var(--border-color);
       color: var(--text-main);
       font-weight: 600;
-      border-radius: 8px;
+      border-radius: 10px;
+      padding: 0.6rem 1.25rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .btn-secondary:hover {
-      background: #e2e8f0;
+      background: var(--coir-gold-subtle);
+      border-color: var(--coir-gold-border);
+      color: var(--coir-gold);
+      transform: translateY(-1px);
+    }
+
+    /* Tables */
+    table tbody tr {
+      transition: background-color 0.15s ease;
+    }
+    table tbody tr:hover {
+      background-color: #fcf9f4 !important;
+    }
+
+    /* Native Dialog Modals with Smooth Backdrop Blur & Pop-In Animation */
+    @keyframes modalBackdropFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes modalPopIn {
+      from { transform: scale(0.95) translateY(10px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    dialog {
+      border-radius: 18px !important;
+      border: 1px solid var(--border-color) !important;
+      background: #ffffff !important;
+      box-shadow: 0 25px 50px -12px rgba(38, 32, 27, 0.22) !important;
+      padding: 1.75rem !important;
+      animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    dialog::backdrop {
+      background: rgba(38, 32, 27, 0.52) !important;
+      backdrop-filter: blur(6px) !important;
+      animation: modalBackdropFadeIn 0.2s ease-out forwards;
     }
 
     /* Smartphone Chat Preview Frame */
     .phone-mockup {
       background: #ffffff;
-      border-radius: 28px;
-      border: 8px solid #1e293b;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      border-radius: 30px;
+      border: 8px solid #2d2621;
+      box-shadow: 0 20px 30px -5px rgba(38, 32, 27, 0.18), 0 8px 12px -6px rgba(38, 32, 27, 0.12);
       overflow: hidden;
       max-width: 360px;
       margin: 0 auto;
+      transition: transform 0.25s ease;
+    }
+    .phone-mockup:hover {
+      transform: translateY(-2px);
     }
     .phone-notch {
-      background: #1e293b;
+      background: #2d2621;
       height: 18px;
       width: 140px;
       margin: 0 auto;
-      border-bottom-left-radius: 10px;
-      border-bottom-right-radius: 10px;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
     }
     .phone-screen {
-      background: #efeae2;
+      background: #f4eee6;
       min-height: 380px;
-      padding: 12px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
     }
     .chat-bubble {
       background: #ffffff;
-      color: #0f172a;
-      border-radius: 12px 12px 12px 2px;
+      color: var(--coir-husk);
+      border-radius: 14px 14px 14px 2px;
       padding: 12px 14px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(38, 32, 27, 0.08);
       font-size: 0.88rem;
       line-height: 1.45;
       margin-bottom: 8px;
       word-wrap: break-word;
+      border-left: 3px solid var(--coir-gold);
     }
     .chat-bubble-tg {
       background: #ffffff;
-      border-radius: 12px 12px 12px 2px;
+      border-radius: 14px 14px 14px 2px;
       border-left: 3px solid #0284c7;
     }
     .chat-time {
       font-size: 0.68rem;
-      color: #64748b;
+      color: var(--text-muted);
       text-align: right;
       margin-top: 4px;
     }
@@ -293,8 +424,8 @@
     footer.pro-footer {
       border-top: 1px solid var(--border-color);
       background: #ffffff;
-      padding: 1.5rem 0;
-      font-size: 0.8rem;
+      padding: 1.75rem 0;
+      font-size: 0.82rem;
       color: var(--text-muted);
       text-align: center;
       margin-top: auto;
@@ -307,22 +438,22 @@
   <header class="top-header">
     <div class="header-inner">
       <a href="/admin/contacts" class="brand-group">
-        <div class="brand-icon">⚡</div>
+        <div class="brand-icon">🥥</div>
         <div class="brand-text">
-          <span class="brand-name">OmniBroadcast Pro</span>
-          <span class="brand-tagline">WhatsApp & Telegram Studio</span>
+          <span class="brand-name">Sree Coir Broadcaster</span>
+          <span class="brand-tagline">Natural Coir Fiber & Pith Studio</span>
         </div>
       </a>
       
       <nav>
         <ul class="nav-links">
-          <li><a href="/admin/contacts" class="nav-link">👥 Contacts</a></li>
-          <li><a href="/admin/contacts/import" class="nav-link">📥 Import CSV</a></li>
-          <li><a href="/admin/campaigns" class="nav-link">🚀 Broadcast Studio</a></li>
+          <li><a href="/admin/contacts" class="nav-link {% if request.url.path == '/admin/contacts' %}active{% endif %}">👥 Contacts & Audience</a></li>
+          <li><a href="/admin/contacts/import" class="nav-link {% if request.url.path == '/admin/contacts/import' %}active{% endif %}">📥 Import CSV</a></li>
+          <li><a href="/admin/campaigns" class="nav-link {% if request.url.path == '/admin/campaigns' %}active{% endif %}">🚀 Broadcast Studio</a></li>
           <li><a href="/docs" target="_blank" class="nav-link">📖 API Docs</a></li>
           <li>
             <form action="/logout" method="post" style="display:inline; margin:0;">
-              <button type="submit" class="btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; margin: 0;">Logout</button>
+              <button type="submit" class="btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.82rem; margin: 0;">Logout</button>
             </form>
           </li>
         </ul>
@@ -346,8 +477,8 @@
 
   <footer class="pro-footer">
     <div class="container" style="padding-top:0; padding-bottom:0;">
-      <strong>OmniBroadcast Pro</strong> — Enterprise Multi-Channel Cloud Messaging Engine.
-      <span>• Official WhatsApp Cloud API & Telegram Bot</span>
+      <strong>Sree Coir Broadcaster</strong> — High-Performance Multi-Channel Cloud Dispatcher for Coir & Agri Enterprises.
+      <span>• Official WhatsApp Cloud API & Telegram MTProto/Bot Engine</span>
     </div>
   </footer>
 </body>
