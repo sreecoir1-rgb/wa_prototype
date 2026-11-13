@@ -35,6 +35,15 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 campaign_sender = CampaignSender()
 
 
+# --- PUBLIC COMPLIANCE ROUTES (META DEVELOPER COMPLIANCE) ---
+
+@router.get("/privacy", response_class=HTMLResponse)
+@router.get("/data-deletion", response_class=HTMLResponse)
+def privacy_policy_page(request: Request) -> Response:
+    """Public privacy policy and user data deletion instructions for Meta compliance."""
+    return templates.TemplateResponse(request=request, name="privacy.html")
+
+
 # --- AUTHENTICATION ROUTES ---
 
 @router.get("/", response_class=HTMLResponse)

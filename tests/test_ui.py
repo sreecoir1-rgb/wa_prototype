@@ -38,6 +38,19 @@ def client_and_db():
     Base.metadata.drop_all(bind=test_engine)
 
 
+def test_public_privacy_policy_accessible(client_and_db) -> None:
+    """Verifies that the privacy policy and data deletion routes are public and accessible."""
+    client, _ = client_and_db
+    res_privacy = client.get("/privacy")
+    assert res_privacy.status_code == 200
+    assert "Privacy Policy & User Data Protection" in res_privacy.text
+    assert "Sree Coir Broadcaster" in res_privacy.text
+    assert "data-deletion" in res_privacy.text
+
+    res_deletion = client.get("/data-deletion")
+    assert res_deletion.status_code == 200
+
+
 def test_unauthenticated_access_redirects_to_login(client_and_db) -> None:
     """Verifies that protected admin pages require authentication."""
     client, _ = client_and_db
